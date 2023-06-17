@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.6.33723.286
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AppoMobi.Maui.Gestures", "src\AppoMobi.Maui.Gestures.csproj", "{3FE4683E-E7A6-4544-B387-08C4C6164DF0}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3FE4683E-E7A6-4544-B387-08C4C6164DF0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3FE4683E-E7A6-4544-B387-08C4C6164DF0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3FE4683E-E7A6-4544-B387-08C4C6164DF0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3FE4683E-E7A6-4544-B387-08C4C6164DF0}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {6AEA9FFC-786F-4D40-930B-D953CF4C62C8}
+	EndGlobalSection
+EndGlobal
