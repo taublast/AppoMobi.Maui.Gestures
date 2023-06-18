@@ -2,7 +2,6 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Input;
 using System.ComponentModel;
-using System.Diagnostics;
 
 namespace AppoMobi.Maui.Gestures
 {
@@ -114,7 +113,7 @@ namespace AppoMobi.Maui.Gestures
 					args.NumberOfTouches = 1; //last finger released, and it was 1
 				}
 
-				Trace.WriteLine($"TouchEffect: {touchActionType} {args.Location.X}x{args.Location.Y} {args.NumberOfTouches}");
+				//Trace.WriteLine($"TouchEffect: {touchActionType} {args.Location.X}x{args.Location.Y} {args.NumberOfTouches}");
 
 				_touchEffect?.OnTouchAction(args);
 			}
