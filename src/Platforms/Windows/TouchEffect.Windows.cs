@@ -109,8 +109,12 @@ namespace AppoMobi.Maui.Gestures
 						args.NumberOfTouches = points.Count;
 					}
 				}
+				else
+				{
+					args.NumberOfTouches = 1; //last finger released, and it was 1
+				}
 
-				Trace.WriteLine($"TouchEffect: {touchActionType} {args.Location.X}x{args.Location.Y}");
+				Trace.WriteLine($"TouchEffect: {touchActionType} {args.Location.X}x{args.Location.Y} {args.NumberOfTouches}");
 
 				_touchEffect?.OnTouchAction(args);
 			}
