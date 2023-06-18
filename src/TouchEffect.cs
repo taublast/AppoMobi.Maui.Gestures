@@ -50,11 +50,12 @@ namespace AppoMobi.Maui.Gestures
 					try
 					{
 						_density = (float)Microsoft.Maui.Devices.DeviceDisplay.Current.MainDisplayInfo.Density;
+						if (_density == 0)
+							throw new Exception("Density is 0");
 					}
 					catch (Exception e)
 					{
 						Console.WriteLine(e);
-
 						return 1f;
 					}
 				}
@@ -734,7 +735,7 @@ namespace AppoMobi.Maui.Gestures
 						if (lastDown != null
 											 && action == TouchActionType.Released
 											 && !lastDown.PreventDefault
-											 && Math.Abs(totalX) < _thresholdTap && Math.Abs(totalY) < _thresholdTap
+											 && Math.Abs(totalX) <= _thresholdTap && Math.Abs(totalY) <= _thresholdTap
 											 )
 						{
 

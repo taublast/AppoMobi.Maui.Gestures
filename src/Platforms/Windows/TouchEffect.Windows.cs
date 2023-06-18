@@ -2,6 +2,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Input;
 using System.ComponentModel;
+using System.Diagnostics;
 
 namespace AppoMobi.Maui.Gestures
 {
@@ -70,8 +71,8 @@ namespace AppoMobi.Maui.Gestures
 
 		void OnPointerReleased(object sender, PointerRoutedEventArgs args)
 		{
-			_pressed = false;
 			FireEvent(sender, TouchActionType.Released, args);
+			_pressed = false;
 		}
 
 		private void OnPointerExited(object sender, PointerRoutedEventArgs args)
@@ -98,6 +99,8 @@ namespace AppoMobi.Maui.Gestures
 					touchActionType,
 					new Microsoft.Maui.Graphics.PointF((float)(windowsPoint.X * TouchEffect.Density), (float)(windowsPoint.Y * TouchEffect.Density)), null);
 
+				args.IsInsideView = _pressed;
+
 				if (pointer.Pointer.IsInContact)
 				{
 					var points = pointer.GetIntermediatePoints(null);
@@ -106,6 +109,8 @@ namespace AppoMobi.Maui.Gestures
 						args.NumberOfTouches = points.Count;
 					}
 				}
+
+				Trace.WriteLine($"TouchEffect: {touchActionType} {args.Location.X}x{args.Location.Y}");
 
 				_touchEffect?.OnTouchAction(args);
 			}
