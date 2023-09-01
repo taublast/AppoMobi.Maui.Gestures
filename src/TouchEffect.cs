@@ -22,6 +22,8 @@ namespace AppoMobi.Maui.Gestures
         /// <returns></returns>
         public static bool IsInsideView(float hitPixelsX, float hitPixelsY, float viewWidthPixels, float viewHeightPixels)
         {
+
+
             bool isInsideView = hitPixelsX >= 0 && hitPixelsY >= 0
                                                 && hitPixelsX <= viewWidthPixels
                                                 && hitPixelsY <= viewHeightPixels;
@@ -413,9 +415,6 @@ namespace AppoMobi.Maui.Gestures
         }
 
 
-
-
-
         /// <summary>
         /// Used by the platform code to dispose itself if Xamarin bugs and fails to detach it properly
         /// </summary>
@@ -588,7 +587,7 @@ namespace AppoMobi.Maui.Gestures
 
         public TouchActionResult LastActionResult { get; protected set; }
 
-
+        public static bool LogEnabled { get; set; }
 
 
         void SendAction(IGestureListener listener, TouchActionType action, TouchActionEventArgs args, TouchActionResult result)
@@ -732,11 +731,37 @@ namespace AppoMobi.Maui.Gestures
                         if (LongPressing == null && CommandLongPressing == null)
                             IsLongPressing = false; //do not affect Tapped then..
 
+
+                        IsLongPressing = false;
+
+                        if (IsPanning)
+                        {
+                            LastActionResult = TouchActionResult.Panned;
+                            IsPanning = false;
+                            if (args.NumberOfTouches < 2 && (args.Distance.Total.X != 0 || args.Distance.Total.Y != 0))
+                            {
+                                if (listener != null)
+                                {
+                                    SendAction(listener, action, args, TouchActionResult.Panned);
+                                }
+                                Panned?.Invoke(element, args);
+                            }
+                        }
+
+                        if (listener != null)
+                        {
+                            SendAction(listener, action, args, TouchActionResult.Up);
+                        }
+
+                        Up?.Invoke(element, args);
+                        LastActionResult = TouchActionResult.Up;
+
+                        //send Tapped only AFTER we sent Up to avoid problems later
                         if (lastDown != null
-                                             && action == TouchActionType.Released
-                                             && !lastDown.PreventDefault
-                                             && Math.Abs(totalX) <= _thresholdTap && Math.Abs(totalY) <= _thresholdTap
-                                             )
+                            && action == TouchActionType.Released
+                            && !lastDown.PreventDefault
+                            && Math.Abs(totalX) <= _thresholdTap && Math.Abs(totalY) <= _thresholdTap
+                           )
                         {
 
                             if (listener != null)
@@ -770,34 +795,7 @@ namespace AppoMobi.Maui.Gestures
                             //}
 
                         }
-                        else
-                        {
-                            var tappedIgnored = true;
-                            //System.Diagnostics.Debug.WriteLine($"[TOUCH] Tapped IGNORED cause {isInsideView}");
-                        }
 
-                        IsLongPressing = false;
-
-                        if (IsPanning)
-                        {
-                            LastActionResult = TouchActionResult.Panned;
-                            IsPanning = false;
-                            if (args.NumberOfTouches < 2 && (args.Distance.Total.X != 0 || args.Distance.Total.Y != 0))
-                            {
-                                if (listener != null)
-                                {
-                                    SendAction(listener, action, args, TouchActionResult.Panned);
-                                }
-                                Panned?.Invoke(element, args);
-                            }
-                        }
-
-                        if (listener != null)
-                        {
-                            SendAction(listener, action, args, TouchActionResult.Up);
-                        }
-                        Up?.Invoke(element, args);
-                        LastActionResult = TouchActionResult.Up;
 
                         //FingersCount--;
                     }
