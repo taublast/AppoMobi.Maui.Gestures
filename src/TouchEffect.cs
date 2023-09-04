@@ -724,16 +724,9 @@ namespace AppoMobi.Maui.Gestures
                         var totalX = Density * args.Distance.Total.X;
                         var totalY = Density * args.Distance.Total.Y;
 
-                        //args.Distance.Velocity = new();
-
                         DisableLongPressingTimer();
 
-                        if (LongPressing == null && CommandLongPressing == null)
-                            IsLongPressing = false; //do not affect Tapped then..
-
-
-                        IsLongPressing = false;
-
+                        //PANNED
                         if (IsPanning)
                         {
                             LastActionResult = TouchActionResult.Panned;
@@ -748,16 +741,8 @@ namespace AppoMobi.Maui.Gestures
                             }
                         }
 
-                        if (listener != null)
-                        {
-                            SendAction(listener, action, args, TouchActionResult.Up);
-                        }
-
-                        Up?.Invoke(element, args);
-                        LastActionResult = TouchActionResult.Up;
-
-                        //send Tapped only AFTER we sent Up to avoid problems later
-                        if (lastDown != null
+                        //TAPPED
+                        if (!IsLongPressing && lastDown != null
                             && action == TouchActionType.Released
                             && !lastDown.PreventDefault
                             && Math.Abs(totalX) <= _thresholdTap && Math.Abs(totalY) <= _thresholdTap
@@ -796,6 +781,15 @@ namespace AppoMobi.Maui.Gestures
 
                         }
 
+                        IsLongPressing = false;
+
+                        //UP
+                        if (listener != null)
+                        {
+                            SendAction(listener, action, args, TouchActionResult.Up);
+                        }
+                        Up?.Invoke(element, args);
+                        LastActionResult = TouchActionResult.Up;
 
                         //FingersCount--;
                     }
