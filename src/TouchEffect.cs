@@ -1,14 +1,60 @@
-﻿using System.Windows.Input;
-
+﻿using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
+using System.Windows.Input;
 
 
 namespace AppoMobi.Maui.Gestures
 {
+    public class ScaleEventArgs : EventArgs
+    {
+        public static ScaleEventArgs Empty = new();
+
+        public float Scale { get; set; }
+
+        /// <summary>
+        /// Pixels inside parent view
+        /// </summary>
+        public PointF Center { get; set; }
+    }
+
     public partial class TouchEffect : RoutingEffect, IDisposable
     {
         public TouchEffect()
         {
             _thresholdTap *= Density;
+        }
+
+        public static ConcurrentDictionary<string, DateTime> TapLocks = new();
+
+        public static bool CheckLocked(string uid)
+        {
+            if (TapLocks.TryGetValue(uid, out DateTime lockTime))
+            {
+                // If the lock is about to be removed, treat it as unlocked
+                if (DateTime.UtcNow >= lockTime)
+                {
+                    TapLocks.TryRemove(uid, out _);
+                    return false;
+                }
+                return true;
+            }
+            return false;
+        }
+
+        public static bool CheckLockAndSet([CallerMemberName] string uid = null, int ms = 500)
+        {
+            if (CheckLocked(uid))
+                return true;
+
+            var unlockTime = DateTime.UtcNow.AddMilliseconds(ms);
+            TapLocks[uid] = unlockTime;
+
+            _ = Task.Delay(ms).ContinueWith(t =>
+            {
+                TapLocks.TryRemove(uid, out _);
+            });
+
+            return false;
         }
 
 
@@ -544,10 +590,7 @@ namespace AppoMobi.Maui.Gestures
 
         //protected TouchActionEventArgs lastPan { get; set; }
 
-        public class EventArgsScale : EventArgs
-        {
-            public float Scale { get; set; }
-        }
+
 
         void SendPinchCommand(TouchActionEventArgs args)
         {
