@@ -368,7 +368,7 @@ namespace AppoMobi.Maui.Gestures
         #region DEFAULT PARAMETERS
 
         public static int LockTimeTimeMsDefault = 0;
-        public static int LongPressTimeMsDefault = 750;
+        public static int LongPressTimeMsDefault = 1500;
 
         #endregion
 
@@ -495,10 +495,11 @@ namespace AppoMobi.Maui.Gestures
         bool _wasLongPressing { get; set; }
 
         private volatile bool _onTimerBusy;
+        private volatile bool lockLongPress;
 
         private void OnLongPress()
         {
-            if (_onTimerBusy || lastDown == null)
+            if (_onTimerBusy || lastDown == null || lockLongPress)
                 return;
 
             _onTimerBusy = true;
@@ -668,7 +669,9 @@ namespace AppoMobi.Maui.Gestures
                     if (action == TouchActionType.Entered || action == TouchActionType.Pressed)
                     {
                         _lastArgs = null;
-                        //Debug.WriteLine("==DOWN==");
+
+                        TimerStarted = DateTime.Now;
+                        lockLongPress = false;
 
                         args.StartingLocation = args.Location;
                         args.IsInContact = true;
@@ -694,6 +697,10 @@ namespace AppoMobi.Maui.Gestures
 
                         LastActionResult = TouchActionResult.Down;
 
+                    }
+                    else
+                    {
+                        lockLongPress = true;
                     }
 
                     TouchActionEventArgs.FillDistanceInfo(args, _lastArgs);
