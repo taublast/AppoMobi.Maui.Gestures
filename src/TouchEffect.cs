@@ -698,15 +698,13 @@ namespace AppoMobi.Maui.Gestures
                         LastActionResult = TouchActionResult.Down;
 
                     }
-                    else
-                    {
-                        lockLongPress = true;
-                    }
+ 
 
                     TouchActionEventArgs.FillDistanceInfo(args, _lastArgs);
 
                     if (action == TouchActionType.Pinch)
                     {
+                        lockLongPress = true;
                         if (listener != null)
                         {
                             SendAction(listener, TouchActionType.Pinch, args, TouchActionResult.Pinched);
@@ -722,6 +720,7 @@ namespace AppoMobi.Maui.Gestures
                              || action == TouchActionType.SwipeTop
                              || action == TouchActionType.SwipeBottom)
                     {
+                        lockLongPress = true;
                         if (listener != null)
                         {
                             SendAction(listener, action, args, TouchActionResult.Swiped);
@@ -737,6 +736,7 @@ namespace AppoMobi.Maui.Gestures
 
                         if (action != TouchActionType.Moved)
                         {
+                            lockLongPress = true;
                             DisableLongPressingTimer();
                         }
 
