@@ -21,7 +21,7 @@ namespace AppoMobi.Maui.Gestures
     {
         public TouchEffect()
         {
-            _thresholdTap *= Density;
+
         }
 
         public static ConcurrentDictionary<string, DateTime> TapLocks = new();
@@ -669,6 +669,7 @@ namespace AppoMobi.Maui.Gestures
                     if (action == TouchActionType.Entered || action == TouchActionType.Pressed)
                     {
                         _lastArgs = null;
+                        _thresholdTap = 20 * Density;
 
                         TimerStarted = DateTime.Now;
                         lockLongPress = false;
@@ -698,7 +699,7 @@ namespace AppoMobi.Maui.Gestures
                         LastActionResult = TouchActionResult.Down;
 
                     }
- 
+
 
                     TouchActionEventArgs.FillDistanceInfo(args, _lastArgs);
 

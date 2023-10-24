@@ -15,11 +15,12 @@
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
 		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
+		<Configurations>Debug;Release;DebugRefs;ReleaseRefs</Configurations>
 	</PropertyGroup>
 
   <PropertyGroup>
     <PackageReleaseNotes>Under construction</PackageReleaseNotes>
-    <Version>1.0.1.2-pre</Version>
+    <Version>1.0.3.1-pre</Version>
     <Title>AppoMobi.Maui.Gestures</Title>
     <Description>Gestures effect and helpers for .Net Maui</Description>
     <PackageTags>maui gestures</PackageTags>
@@ -31,12 +32,8 @@
     <RepositoryUrl>https://github.com/taublast/AppoMobi.Maui.Gestures</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <IncludeSymbols>true</IncludeSymbols>
+    <Packable>true</Packable>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)'=='Release'">
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <CreatePackage>True</CreatePackage>
   </PropertyGroup>
 
   <ItemGroup>
