@@ -499,7 +499,7 @@ namespace AppoMobi.Maui.Gestures
 
         private void OnLongPress()
         {
-            if (_onTimerBusy || lastDown == null || lockLongPress)
+            if (_onTimerBusy || lastDown == null || lockLongPress || IsPanning)
                 return;
 
             _onTimerBusy = true;
@@ -777,29 +777,14 @@ namespace AppoMobi.Maui.Gestures
 
                         DisableLongPressingTimer();
 
-                        //PANNED
-                        if (IsPanning)
-                        {
-                            LastActionResult = TouchActionResult.Panned;
-                            IsPanning = false;
-                            if (args.NumberOfTouches < 2 && (args.Distance.Total.X != 0 || args.Distance.Total.Y != 0))
-                            {
-                                if (listener != null)
-                                {
-                                    SendAction(listener, action, args, TouchActionResult.Panned);
-                                }
-                                Panned?.Invoke(element, args);
-                            }
-                        }
-
                         //TAPPED
-                        if (!IsLongPressing && lastDown != null
-                            && action == TouchActionType.Released
-                            && !lastDown.PreventDefault
-                            && Math.Abs(totalX) <= _thresholdTap && Math.Abs(totalY) <= _thresholdTap
+                        if (!IsPanning && !IsLongPressing
+                           && lastDown != null
+                          && action == TouchActionType.Released
+                          && !lastDown.PreventDefault
+                          && Math.Abs(totalX) <= _thresholdTap && Math.Abs(totalY) <= _thresholdTap
                            )
                         {
-
                             if (listener != null)
                             {
                                 //tapped
@@ -834,6 +819,21 @@ namespace AppoMobi.Maui.Gestures
 
                         IsLongPressing = false;
 
+                        //PANNED
+                        if (IsPanning)
+                        {
+                            LastActionResult = TouchActionResult.Panned;
+                            IsPanning = false;
+                            if (args.NumberOfTouches < 2 && (args.Distance.Total.X != 0 || args.Distance.Total.Y != 0))
+                            {
+                                if (listener != null)
+                                {
+                                    SendAction(listener, action, args, TouchActionResult.Panned);
+                                }
+                                Panned?.Invoke(element, args);
+                            }
+                        }
+
                         //UP
                         if (listener != null)
                         {
@@ -858,7 +858,7 @@ namespace AppoMobi.Maui.Gestures
                             SendAction(listener, action, args, TouchActionResult.Panning);
                         }
                         Panning?.Invoke(element, args);
-
+                        IsPanning = true;
                     }
 
                     #region Send raw touch event
