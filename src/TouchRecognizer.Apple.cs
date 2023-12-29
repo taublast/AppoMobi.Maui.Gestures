@@ -51,7 +51,7 @@ namespace AppoMobi.Maui.Gestures
                 var centerX = (point1.X + point2.X) / 2;
                 var centerY = (point1.Y + point2.Y) / 2;
 
-                _parent.Pinch = new ScaleEventArgs()
+                _parent.Pinch = new TouchEffect.ScaleEventArgs()
                 {
                     Scale = (float)recognizer.Scale,
                     Center = new((float)centerX * TouchEffect.Density, (float)centerY * TouchEffect.Density)

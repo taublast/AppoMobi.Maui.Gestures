@@ -47,7 +47,7 @@ public class ScaleListener : ScaleGestureDetector.SimpleOnScaleGestureListener
         float focusX = scaleGestureDetector.FocusX;
         float focusY = scaleGestureDetector.FocusY;
 
-        _parent.OnScaleChanged(this, new ScaleEventArgs
+        _parent.OnScaleChanged(this, new TouchEffect.ScaleEventArgs
         {
             Scale = ScaleFactor,
             Center = new(focusX, focusY) //pixels

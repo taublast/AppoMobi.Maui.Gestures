@@ -96,7 +96,7 @@ public partial class PlatformTouchEffect
     public class TouchListener : GestureDetector.SimpleOnGestureListener, View.IOnTouchListener
     {
 
-        public static bool UseLowCpu = false;
+        //public static bool UseLowCpu = false;
 
         public bool PinchEnabled = true;
 
@@ -129,7 +129,7 @@ public partial class PlatformTouchEffect
 
         ScaleGestureDetector scaleGestureDetector;
 
-        public void OnScaleChanged(object sender, ScaleEventArgs e)
+        public void OnScaleChanged(object sender, TouchEffect.ScaleEventArgs e)
         {
             //Debug.WriteLine($"[TOUCH] Android: OnScaleChanged {e.Scale:0.000}");
             _parent.Pinch = e;
@@ -227,15 +227,16 @@ public partial class PlatformTouchEffect
 
                 case MotionEventActions.Move:
 
-                if (UseLowCpu)
-                {
-                    var now = DateTime.Now;
-                    if ((now - _lastEventTime).TotalMilliseconds < 16)
-                    {
-                        break;
-                    }
-                    _lastEventTime = now;
-                }
+                    ///skip gestures..
+                //if (UseLowCpu)
+                //{
+                //    var now = DateTime.Now;
+                //    if ((now - _lastEventTime).TotalMilliseconds < 16)
+                //    {
+                //        break;
+                //    }
+                //    _lastEventTime = now;
+                //}
 
                 //if (_parent.FormsEffect.TouchMode == TouchHandlingStyle.Lock)
                 //    LockInput(sender);

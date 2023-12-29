@@ -1,12 +1,10 @@
-# AppoMobi.Maui.Gestures
+﻿# AppoMobi.Maui.Gestures
 
 Library for .Net MAUI to handle gestures. Can be consumed in Xaml and code-behind.
 
-The current development state is __PRE-ALPHA__, many features remain to be implemented, the project is active.
+This library is used by [DrawnUi for .Net Maui](https://github.com/taublast/AppoMobi.Maui.DrawnUi.Demo). 
 
-This library is used by DrawnUi for .Net Maui for all its gestures.
-
-This readme is heavily under construction, a lot of properties and use cases are not documented.
+►[Latest nuget](https://www.nuget.org/packages/AppoMobi.Maui.Gestures/1.0.4.9)◄
 
 ## Features
 
@@ -91,5 +89,15 @@ As you might guess __OnGestureEvent__ will be invoked on every touch detected if
 
 For a case of your custom control sitting inside a ScrollView there is a TouchMode property to be played with.
 For example you might want to set it to TouchHandlingStyle.Lock so that when your control receives the Down event the parent ScrollView stops receiving gestures until we get an Up, so we can Pan our control at will.
+
+#### Tweaks
+
+`public static TouchEffect.TappedWhenMovedThresholdPoints`
+
+_How much finger can move between DOWN and UP for the gestured to be still considered as TAPPED. In points, not pixels._
+
+```csharp
+TouchEffect.TappedWhenMovedThresholdPoints = 10f;
+```
 
 

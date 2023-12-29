@@ -5,17 +5,6 @@ using System.Windows.Input;
 
 namespace AppoMobi.Maui.Gestures
 {
-    public class ScaleEventArgs : EventArgs
-    {
-        public static ScaleEventArgs Empty = new();
-
-        public float Scale { get; set; }
-
-        /// <summary>
-        /// Pixels inside parent view
-        /// </summary>
-        public PointF Center { get; set; }
-    }
 
     public partial class TouchEffect : RoutingEffect, IDisposable
     {
@@ -24,21 +13,45 @@ namespace AppoMobi.Maui.Gestures
 
         }
 
-        public static ConcurrentDictionary<string, DateTime> TapLocks = new();
+        public class ScaleEventArgs : EventArgs
+        {
+
+            public float Scale { get; set; }
+
+            /// <summary>
+            /// Pixels inside parent view
+            /// </summary>
+            public PointF Center { get; set; }
+        }
+
+        public static bool LogEnabled { get; set; }
+
+        /// <summary>
+        /// How much finger can move between DOWN and UP for the gestured to be still considered as TAPPED. In points, not pixels.
+        /// </summary>
+        public static float TappedWhenMovedThresholdPoints = 10f;
+
+
+        public static Dictionary<string, DateTime> TapLocks = new();
+
+        static object lockTapLocks = new();
 
         public static bool CheckLocked(string uid)
         {
-            if (TapLocks.TryGetValue(uid, out DateTime lockTime))
+            lock (lockTapLocks)
             {
-                // If the lock is about to be removed, treat it as unlocked
-                if (DateTime.UtcNow >= lockTime)
+                if (TapLocks.TryGetValue(uid, out DateTime lockTime))
                 {
-                    TapLocks.TryRemove(uid, out _);
-                    return false;
+                    // If the lock is about to be removed, treat it as unlocked
+                    if (DateTime.UtcNow >= lockTime)
+                    {
+                        TapLocks.Remove(uid, out _);
+                        return false;
+                    }
+                    return true;
                 }
-                return true;
+                return false;
             }
-            return false;
         }
 
         public static bool CheckLockAndSet([CallerMemberName] string uid = null, int ms = 500)
@@ -51,7 +64,10 @@ namespace AppoMobi.Maui.Gestures
 
             _ = Task.Delay(ms).ContinueWith(t =>
             {
-                TapLocks.TryRemove(uid, out _);
+                lock (lockTapLocks)
+                {
+                    TapLocks.Remove(uid, out _);
+                }
             });
 
             return false;
@@ -631,8 +647,6 @@ namespace AppoMobi.Maui.Gestures
 
         public TouchActionResult LastActionResult { get; protected set; }
 
-        public static bool LogEnabled { get; set; }
-
 
         void SendAction(IGestureListener listener, TouchActionType action, TouchActionEventArgs args, TouchActionResult result)
         {
@@ -665,11 +679,12 @@ namespace AppoMobi.Maui.Gestures
 
                     var action = args.Type;
 
-
-                    if (action == TouchActionType.Entered || action == TouchActionType.Pressed)
+                    if (action == TouchActionType.Entered
+                        || action == TouchActionType.Pressed)
                     {
+
                         _lastArgs = null;
-                        _thresholdTap = 20 * Density;
+                        _thresholdTap = TappedWhenMovedThresholdPoints * Density;
 
                         TimerStarted = DateTime.Now;
                         lockLongPress = false;
@@ -778,7 +793,8 @@ namespace AppoMobi.Maui.Gestures
                         DisableLongPressingTimer();
 
                         //TAPPED
-                        if (!IsPanning && !IsLongPressing
+                        if (//!IsPanning && 
+                            !IsLongPressing
                            && lastDown != null
                           && action == TouchActionType.Released
                           && !lastDown.PreventDefault

@@ -4,7 +4,7 @@
     {
         public int CountFingers;
 
-        public ScaleEventArgs Pinch;
+        public TouchEffect.ScaleEventArgs Pinch;
 
         public TouchEffect FormsEffect;
 

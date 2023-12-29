@@ -170,7 +170,7 @@
         /// </summary>
         public int NumberOfTouches { get; set; }
 
-        public ScaleEventArgs Pinch { get; set; }
+        public TouchEffect.ScaleEventArgs Pinch { get; set; }
 
         /// <summary>
         /// In pixels inside parent view,
