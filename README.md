@@ -4,7 +4,7 @@ Library for .Net MAUI to handle gestures. Can be consumed in Xaml and code-behin
 
 This library is used by [DrawnUi for .Net Maui](https://github.com/taublast/AppoMobi.Maui.DrawnUi.Demo). 
 
-►[Latest nuget](https://www.nuget.org/packages/AppoMobi.Maui.Gestures/1.0.4.9)◄
+►[Latest nuget](https://www.nuget.org/packages/AppoMobi.Maui.Gestures/1.0.4.10)◄
 
 ## Features
 
@@ -99,5 +99,3 @@ _How much finger can move between DOWN and UP for the gestured to be still consi
 ```csharp
 TouchEffect.TappedWhenMovedThresholdPoints = 10f;
 ```
-
-
