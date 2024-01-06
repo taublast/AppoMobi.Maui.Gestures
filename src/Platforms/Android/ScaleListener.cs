@@ -14,7 +14,7 @@ public class ScaleListener : ScaleGestureDetector.SimpleOnScaleGestureListener
 
     public float ScaleLimitMin { get; set; } = 0.1f;
 
-    public float ScaleLimitMax { get; set; } = 10.0f;
+    public float ScaleLimitMax { get; set; } = 1000.0f;
 
     public float ScaleFactor { get; set; } = 1.0f;
 
