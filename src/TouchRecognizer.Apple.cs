@@ -33,7 +33,6 @@ namespace AppoMobi.Maui.Gestures
             recognizer = null;
 
             _view.RemoveGestureRecognizer(this);
-        }
 
         public void Attach()
         {
@@ -41,8 +40,19 @@ namespace AppoMobi.Maui.Gestures
 
             recognizer = new UIPinchGestureRecognizer(() =>
             {
-                if (recognizer.NumberOfTouches < 2)
-                    return;
+      
+                if (recognizer.NumberOfTouches == 2 && recognizer.State == UIGestureRecognizerState.Began)
+                {
+                    _parent.CountFingers = 1;
+                    _parent.FireEvent(0, TouchActionType.Cancelled, _lastPoint);
+                }
+
+                _parent.CountFingers = (int)recognizer.NumberOfTouches;
+                if (recognizer.NumberOfTouches < 2 || recognizer.State == UIGestureRecognizerState.Ended || recognizer.State == UIGestureRecognizerState.Cancelled)
+                    {
+                        _parent.FireEvent(0, TouchActionType.Cancelled, _lastPoint);
+                        return;
+                    }
 
                 CGPoint point1 = recognizer.LocationOfTouch(0, recognizer.View);
                 CGPoint point2 = recognizer.LocationOfTouch(1, recognizer.View);
@@ -56,26 +66,17 @@ namespace AppoMobi.Maui.Gestures
                     Scale = (float)recognizer.Scale,
                     Center = new((float)centerX * TouchEffect.Density, (float)centerY * TouchEffect.Density)
                 };
-                _parent.CountFingers = (int)recognizer.NumberOfTouches;
 
-                var point = new PointF((float)point1.X, (float)point1.Y);
-
-                if (recognizer.State == UIGestureRecognizerState.Ended
-                    || recognizer.State == UIGestureRecognizerState.Cancelled)
-                {
-                    Debug.WriteLine("pinchGestureRecognizer.State == UIGestureRecognizerState.Ended");
-                    //FireEvent(0, TouchActionType.Cancelled, point);
-                }
-                else
-                {
-                    _parent.FireEvent(0, TouchActionType.Pinch, point);
-                }
+                _lastPoint = new PointF((float)point1.X, (float)point1.Y);
+                _parent.FireEvent(0, TouchActionType.Pinch, _lastPoint);
 
             });
+
 
             _view.AddGestureRecognizer(recognizer);
         }
 
+        PointF _lastPoint;
 
         private bool ShouldRecLocked(UIGestureRecognizer gesturerecognizer, UIGestureRecognizer othergesturerecognizer)
         {
@@ -198,21 +199,28 @@ namespace AppoMobi.Maui.Gestures
 
             _parent.CountFingers = (int)NumberOfTouches;
 
-            foreach (UITouch touch in touches.Cast<UITouch>())
+            var uiTouches = touches.Cast<UITouch>();
+            if (uiTouches.Count()>0)
             {
-                CGPoint cgPoint = touch.LocationInView(this.View);
-                var xfPoint = new PointF((float)cgPoint.X, (float)cgPoint.Y);
-                bool isInside = CheckPointIsInsideRecognizer(xfPoint, this);
-                long id = ((IntPtr)touch.Handle).ToInt64();
+                foreach (UITouch touch in uiTouches)
+                {
+                    CGPoint cgPoint = touch.LocationInView(this.View);
+                    var xfPoint = new PointF((float)cgPoint.X, (float)cgPoint.Y);
+                    bool isInside = CheckPointIsInsideRecognizer(xfPoint, this);
+                    long id = ((IntPtr)touch.Handle).ToInt64();
 
-                if (isInside)
-                    _parent.FireEvent(id, TouchActionType.Released, touch);
-                else
-                    _parent.FireEvent(id, TouchActionType.Exited, touch);
-
-                UnlockTouch();
+                    if (isInside)
+                        _parent.FireEvent(id, TouchActionType.Released, touch);
+                    else
+                        _parent.FireEvent(id, TouchActionType.Exited, touch);
+                }
+            }
+            else
+            {
+                _parent.FireEvent(0, TouchActionType.Released, PointF.Zero);
             }
 
+            UnlockTouch();
         }
 
         public override void TouchesCancelled(NSSet touches, UIEvent evt)
