@@ -33,6 +33,7 @@ namespace AppoMobi.Maui.Gestures
             recognizer = null;
 
             _view.RemoveGestureRecognizer(this);
+        }
 
         public void Attach()
         {
