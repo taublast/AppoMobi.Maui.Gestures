@@ -19,7 +19,7 @@
 
   <PropertyGroup>
     <!--<PackageReleaseNotes>Under construction</PackageReleaseNotes>-->
-    <Version>1.0.5.0</Version>
+    <Version>1.0.5.2</Version>
     <Title>AppoMobi.Maui.Gestures</Title>
     <Description>Gestures effect and helpers for .Net Maui</Description>
     <PackageTags>maui gestures</PackageTags>

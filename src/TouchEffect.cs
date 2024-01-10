@@ -29,8 +29,7 @@ namespace AppoMobi.Maui.Gestures
         /// <summary>
         /// How much finger can move between DOWN and UP for the gestured to be still considered as TAPPED. In points, not pixels.
         /// </summary>
-        public static float TappedWhenMovedThresholdPoints = 10f;
-
+        public static float TappedWhenMovedThresholdPoints = 2f;
 
         public static Dictionary<string, DateTime> TapLocks = new();
 
