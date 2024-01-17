@@ -124,6 +124,10 @@ namespace AppoMobi.Maui.Gestures
                 }
                 return _density;
             }
+            set
+            {
+                _density = value;
+            }
         }
 
         #region ATTACHABLE PROPS
