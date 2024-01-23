@@ -1,10 +1,8 @@
 ﻿# AppoMobi.Maui.Gestures
 
-Library for .Net MAUI to handle gestures. Can be consumed in Xaml and code-behind.
+Library for .Net MAUI to handle gestures. Can be consumed in Xaml and code-behind. A nuget with the same name is available.
 
 This library is used by [DrawnUi for .Net Maui](https://github.com/taublast/AppoMobi.Maui.DrawnUi.Demo). 
-
-►[nuget](https://www.nuget.org/packages/AppoMobi.Maui.Gestures)◄
 
 ## Features
 
