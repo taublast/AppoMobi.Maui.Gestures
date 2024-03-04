@@ -1,6 +1,4 @@
-﻿// ReSharper restore All
-
-using CoreGraphics;
+﻿using CoreGraphics;
 using Foundation;
 using System.Diagnostics;
 using UIKit;
