@@ -110,7 +110,7 @@ public partial class PlatformTouchEffect
                 if (scaleGestureDetector != null)
                     scaleGestureDetector.OnTouchEvent(motionEvent);
 
-                if (IsPinching)
+                if (IsPinching && _parent.CountFingers > 1)
                 {
                     _parent.FireEvent(id,
                         TouchActionType.Pinch, _parent.Pinch.Center);
