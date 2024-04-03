@@ -2,7 +2,10 @@
 {
     public interface IGestureListener
     {
-        public void OnGestureEvent(TouchActionType type, TouchActionEventArgs args, TouchActionResult action);
+        public void OnGestureEvent(
+            TouchActionType type,
+            TouchActionEventArgs args,
+            TouchActionResult action);
         public bool InputTransparent { get; }
     }
 }

@@ -127,13 +127,12 @@ namespace AppoMobi.Maui.Gestures
                 FormsEffect = null;
             }
 
-            _touchRecognizer?.Detach();
-
-            _touchRecognizer?.Dispose();
-
-            _touchRecognizer = null;
-
-
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                _touchRecognizer?.Detach();
+                _touchRecognizer?.Dispose();
+                _touchRecognizer = null;
+            });
         }
     }
 }

@@ -2,13 +2,13 @@
 
 public enum TouchActionResult
 {
-	Touch,
-	Down,
-	Up,
-	Tapped,
-	LongPressing,
-	Panning,
-	Panned,
-	Swiped,
-	Pinched
+    Touch,
+    Down,
+    Up,
+    Tapped,
+    LongPressing,
+    Panning,
+    //Panned,
+    //Swiped,
+    Pinched
 }

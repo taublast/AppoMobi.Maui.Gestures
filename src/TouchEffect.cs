@@ -15,6 +15,7 @@ namespace AppoMobi.Maui.Gestures
 
         public class ScaleEventArgs : EventArgs
         {
+            public float Delta { get; set; }
 
             public float Scale { get; set; }
 
@@ -734,19 +735,19 @@ namespace AppoMobi.Maui.Gestures
                         Pinched?.Invoke(Element, args);
                         LastActionResult = TouchActionResult.Pinched;
                     }
-                    else if (action == TouchActionType.SwipeLeft
-                             || action == TouchActionType.SwipeRight
-                             || action == TouchActionType.SwipeTop
-                             || action == TouchActionType.SwipeBottom)
-                    {
-                        lockLongPress = true;
-                        if (listener != null)
-                        {
-                            SendAction(listener, action, args, TouchActionResult.Swiped);
-                        }
-                        Swiped?.Invoke(element, args);
-                        LastActionResult = TouchActionResult.Swiped;
-                    }
+                    //else if (action == TouchActionType.SwipeLeft
+                    //         || action == TouchActionType.SwipeRight
+                    //         || action == TouchActionType.SwipeTop
+                    //         || action == TouchActionType.SwipeBottom)
+                    //{
+                    //    lockLongPress = true;
+                    //    if (listener != null)
+                    //    {
+                    //        SendAction(listener, action, args, TouchActionResult.Swiped);
+                    //    }
+                    //    Swiped?.Invoke(element, args);
+                    //    LastActionResult = TouchActionResult.Swiped;
+                    //}
                     else if (action == TouchActionType.Moved
                              || action == TouchActionType.PanEnded
                              || action == TouchActionType.PanChanged
@@ -841,16 +842,16 @@ namespace AppoMobi.Maui.Gestures
                         //PANNED
                         if (IsPanning)
                         {
-                            LastActionResult = TouchActionResult.Panned;
+                            //LastActionResult = TouchActionResult.Panned;
                             IsPanning = false;
-                            if (args.NumberOfTouches < 2 && (args.Distance.Total.X != 0 || args.Distance.Total.Y != 0))
-                            {
-                                if (listener != null)
-                                {
-                                    SendAction(listener, action, args, TouchActionResult.Panned);
-                                }
-                                Panned?.Invoke(element, args);
-                            }
+                            //if (args.NumberOfTouches < 2 && (args.Distance.Total.X != 0 || args.Distance.Total.Y != 0))
+                            //{
+                            //    if (listener != null)
+                            //    {
+                            //        SendAction(listener, action, args, TouchActionResult.Panned);
+                            //    }
+                            //    Panned?.Invoke(element, args);
+                            //}
                         }
 
                         //UP

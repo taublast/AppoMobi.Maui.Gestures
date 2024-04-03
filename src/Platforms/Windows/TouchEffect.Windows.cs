@@ -37,9 +37,9 @@ namespace AppoMobi.Maui.Gestures
                 frameworkElement.PointerMoved += OnPointerMoved;
                 frameworkElement.PointerReleased += OnPointerReleased;
                 frameworkElement.PointerExited += OnPointerExited;
+                frameworkElement.PointerWheelChanged += OnWheelChanged;
             }
         }
-
 
         protected override void OnDetached()
         {
@@ -49,6 +49,7 @@ namespace AppoMobi.Maui.Gestures
                 frameworkElement.PointerMoved -= OnPointerMoved;
                 frameworkElement.PointerReleased -= OnPointerReleased;
                 frameworkElement.PointerExited -= OnPointerExited;
+                frameworkElement.PointerWheelChanged -= OnWheelChanged;
             }
         }
 
@@ -57,6 +58,38 @@ namespace AppoMobi.Maui.Gestures
         private volatile TouchEffect _touchEffect;
 
         private readonly HashSet<uint> activePointerIds = new HashSet<uint>();
+
+        public float ScaleLimitMin { get; set; } = 0.1f;
+
+        public float ScaleLimitMax { get; set; } = 1000.0f;
+
+        public float ScaleFactor { get; set; } = 1.0f;
+
+        public float WheelDelta { get; set; } = 40 / 0.1f;
+
+        private void OnWheelChanged(object sender, PointerRoutedEventArgs args)
+        {
+            //_pressed = true;
+            var id = args.Pointer.PointerId;
+
+            var pointerPoint = args.GetCurrentPoint(frameworkElement);
+            var windowsPoint = pointerPoint.Position;
+            //var mouse = GetMouseButton(pointerPoint);
+            //var device = GetTouchDevice(evt);
+            var wheelDelta = pointerPoint?.Properties?.MouseWheelDelta ?? 0;
+
+            float scaleFactorAdjustment = wheelDelta > 0 ? 1.05f : 0.95f;
+            ScaleFactor = Math.Max(ScaleLimitMin, Math.Min(ScaleFactor * scaleFactorAdjustment, ScaleLimitMax));
+
+            activePointerIds.Add(args.Pointer.PointerId);
+            Pinch = new TouchEffect.ScaleEventArgs()
+            {
+                Delta = wheelDelta / WheelDelta,
+                Scale = (float)ScaleFactor,
+                Center = new PointF((float)windowsPoint.X * TouchEffect.Density, (float)windowsPoint.Y * TouchEffect.Density)
+            };
+            FireEvent(sender, TouchActionType.Pinch, args);
+        }
 
         void OnPointerPressed(object sender, PointerRoutedEventArgs args)
         {
@@ -104,6 +137,8 @@ namespace AppoMobi.Maui.Gestures
                     new Microsoft.Maui.Graphics.PointF((float)(windowsPoint.X * TouchEffect.Density), (float)(windowsPoint.Y * TouchEffect.Density)), null);
 
                 args.IsInsideView = _pressed;
+
+                args.Pinch = Pinch;
 
                 if (pointer.Pointer.IsInContact)
                 {

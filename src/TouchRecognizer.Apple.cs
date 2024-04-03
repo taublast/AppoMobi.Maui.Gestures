@@ -23,7 +23,6 @@ namespace AppoMobi.Maui.Gestures
 
         public void Detach()
         {
-
             _view.RemoveGestureRecognizer(recognizer);
 
             recognizer?.Dispose();
@@ -39,7 +38,7 @@ namespace AppoMobi.Maui.Gestures
 
             recognizer = new UIPinchGestureRecognizer(() =>
             {
-      
+
                 if (recognizer.NumberOfTouches == 2 && recognizer.State == UIGestureRecognizerState.Began)
                 {
                     _parent.CountFingers = 1;
@@ -48,10 +47,10 @@ namespace AppoMobi.Maui.Gestures
 
                 _parent.CountFingers = (int)recognizer.NumberOfTouches;
                 if (recognizer.NumberOfTouches < 2 || recognizer.State == UIGestureRecognizerState.Ended || recognizer.State == UIGestureRecognizerState.Cancelled)
-                    {
-                        _parent.FireEvent(0, TouchActionType.Cancelled, _lastPoint);
-                        return;
-                    }
+                {
+                    _parent.FireEvent(0, TouchActionType.Cancelled, _lastPoint);
+                    return;
+                }
 
                 CGPoint point1 = recognizer.LocationOfTouch(0, recognizer.View);
                 CGPoint point2 = recognizer.LocationOfTouch(1, recognizer.View);
@@ -199,7 +198,7 @@ namespace AppoMobi.Maui.Gestures
             _parent.CountFingers = (int)NumberOfTouches;
 
             var uiTouches = touches.Cast<UITouch>();
-            if (uiTouches.Count()>0)
+            if (uiTouches.Count() > 0)
             {
                 foreach (UITouch touch in uiTouches)
                 {
