@@ -11,8 +11,8 @@ This library is used by [DrawnUi for .Net Maui](https://github.com/taublast/Appo
 * Tap
 * LongPress
 * Pan
-* Pinch (_windows platform missing_)
-* Rotate (_in progress_)
+* Pinch (windows platform sends it for mouse wheel)
+* Rotate (_on the roadmap_)
 
 Here and there some properties are still missing, but the main functionality is there.
 
