@@ -869,8 +869,8 @@ namespace AppoMobi.Maui.Gestures
                     //advise client with some logic.. 
 
 
-                    if (args.NumberOfTouches == 1
-                        && (args.Distance.Delta.X != 0 || args.Distance.Delta.Y != 0)
+                    if (//args.NumberOfTouches == 1 && 
+                        (args.Distance.Delta.X != 0 || args.Distance.Delta.Y != 0)
                         && LastActionResult == TouchActionResult.Panning)
                     {
                         if (listener != null)

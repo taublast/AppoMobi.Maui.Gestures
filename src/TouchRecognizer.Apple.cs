@@ -10,8 +10,7 @@ namespace AppoMobi.Maui.Gestures
 
         volatile PlatformTouchEffect _parent;
         UIView _view;
-
-        UIPinchGestureRecognizer recognizer;
+        
         private bool _disposed;
 
         public TouchRecognizer(UIView view, PlatformTouchEffect parent)
@@ -23,12 +22,6 @@ namespace AppoMobi.Maui.Gestures
 
         public void Detach()
         {
-            _view.RemoveGestureRecognizer(recognizer);
-
-            recognizer?.Dispose();
-
-            recognizer = null;
-
             _view.RemoveGestureRecognizer(this);
         }
 
@@ -36,42 +29,41 @@ namespace AppoMobi.Maui.Gestures
         {
             _view.AddGestureRecognizer(this);
 
-            recognizer = new UIPinchGestureRecognizer(() =>
-            {
-
-                if (recognizer.NumberOfTouches == 2 && recognizer.State == UIGestureRecognizerState.Began)
-                {
-                    _parent.CountFingers = 1;
-                    _parent.FireEvent(0, TouchActionType.Cancelled, _lastPoint);
-                }
-
-                _parent.CountFingers = (int)recognizer.NumberOfTouches;
-                if (recognizer.NumberOfTouches < 2 || recognizer.State == UIGestureRecognizerState.Ended || recognizer.State == UIGestureRecognizerState.Cancelled)
-                {
-                    _parent.FireEvent(0, TouchActionType.Cancelled, _lastPoint);
-                    return;
-                }
-
-                CGPoint point1 = recognizer.LocationOfTouch(0, recognizer.View);
-                CGPoint point2 = recognizer.LocationOfTouch(1, recognizer.View);
-
-                // Calculate the center point
-                var centerX = (point1.X + point2.X) / 2;
-                var centerY = (point1.Y + point2.Y) / 2;
-
-                _parent.Pinch = new TouchEffect.ScaleEventArgs()
-                {
-                    Scale = (float)recognizer.Scale,
-                    Center = new((float)centerX * TouchEffect.Density, (float)centerY * TouchEffect.Density)
-                };
-
-                _lastPoint = new PointF((float)point1.X, (float)point1.Y);
-                _parent.FireEvent(0, TouchActionType.Pinch, _lastPoint);
-
-            });
-
-
-            _view.AddGestureRecognizer(recognizer);
+            // recognizer = new UIPinchGestureRecognizer(() =>
+            // {
+            //
+            //     if (recognizer.NumberOfTouches == 2 && recognizer.State == UIGestureRecognizerState.Began)
+            //     {
+            //         _parent.CountFingers = 1;
+            //         _parent.FireEvent(0, TouchActionType.Cancelled, _lastPoint);
+            //     }
+            //
+            //     _parent.CountFingers = (int)recognizer.NumberOfTouches;
+            //     if (recognizer.NumberOfTouches < 2 || recognizer.State == UIGestureRecognizerState.Ended || recognizer.State == UIGestureRecognizerState.Cancelled)
+            //     {
+            //         _parent.FireEvent(0, TouchActionType.Cancelled, _lastPoint);
+            //         return;
+            //     }
+            //
+            //     CGPoint point1 = recognizer.LocationOfTouch(0, recognizer.View);
+            //     CGPoint point2 = recognizer.LocationOfTouch(1, recognizer.View);
+            //
+            //     // Calculate the center point
+            //     var centerX = (point1.X + point2.X) / 2;
+            //     var centerY = (point1.Y + point2.Y) / 2;
+            //
+            //     _parent.Pinch = new TouchEffect.ScaleEventArgs()
+            //     {
+            //         Scale = (float)recognizer.Scale,
+            //         Center = new((float)centerX * TouchEffect.Density, (float)centerY * TouchEffect.Density)
+            //     };
+            //
+            //     _lastPoint = new PointF((float)point1.X, (float)point1.Y);
+            //     _parent.FireEvent(0, TouchActionType.Pinch, _lastPoint);
+            //
+            // });
+            //
+            // _view.AddGestureRecognizer(recognizer);
         }
 
         PointF _lastPoint;
