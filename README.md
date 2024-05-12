@@ -92,19 +92,29 @@ When you get a `TouchActionResult.Panning` you could also have the property `Man
 
 The static property `TouchEffect.Density` is used internally to convert pixels/points, you can you it too as all the data you would get will be in pixels, convert it to points/whatever as you please.
 
-An example of usage by a custom control by implementing the `IGestureListener` interface: https://github.com/taublast/DrawnUi.Maui/blob/main/src/Engine/Views/Canvas.cs
-
 #### Hints
 
-For a case of your custom control sitting inside a ScrollView there is a TouchMode property to be played with.
-For example you might want to set it to `TouchHandlingStyle.Lock` so that when your control receives the Down event the parent ScrollView stops receiving gestures until we get an Up, so we can Pan our control at will.
+* For a case of your custom control sitting inside a ScrollView there is a TouchMode property to be played with. For example you might want to set it to `TouchHandlingStyle.Lock` so that when your control receives the Down event the parent ScrollView stops receiving gestures until we get an Up, so we can Pan our control at will.
+
+* You can close the keyboard programmatically on Android with a 
+
+```csharp
+TouchEffect.CloseKeyboard();
+```
 
 #### Tweaks
 
-`public static TouchEffect.TappedWhenMovedThresholdPoints`
+Actually we have some static properties for settings.
 
-How much finger can move between DOWN and UP for the gestured to be still considered as TAPPED. In points, not pixels.
+* How much finger can move between DOWN and UP for the gestured to be still considered as TAPPED. In points, not pixels.
 
 ```csharp
 TouchEffect.TappedWhenMovedThresholdPoints = 10f;
 ```
+
+* How much milliseconds to wait until LongPressing is triggered.
+
+```csharp
+TouchEffect.LongPressTimeMsDefault = 1500;
+```
+
