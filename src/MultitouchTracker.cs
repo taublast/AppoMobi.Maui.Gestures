@@ -1,4 +1,6 @@
-﻿using System.Collections.Concurrent;
+// Using adapted code from https://github.com/Mapsui/Mapsui
+
+using System.Collections.Concurrent;
 using System.Diagnostics;
 
 namespace AppoMobi.Maui.Gestures;
