@@ -6,6 +6,7 @@
             TouchActionType type,
             TouchActionEventArgs args,
             TouchActionResult action);
+
         public bool InputTransparent { get; }
     }
 }
