@@ -170,7 +170,7 @@
         /// </summary>
         public int NumberOfTouches { get; set; }
 
-        public TouchEffect.ScaleEventArgs Pinch { get; set; }
+        public TouchEffect.WheelEventArgs Wheel { get; set; }
 
         /// <summary>
         /// In pixels inside parent view,
@@ -182,13 +182,26 @@
             set;
         }
 
-        public float Rotated { get; set; }
+        public ManipulationInfo Manipulation
+        {
+            get;
+            set;
+        }
+
+        public record ManipulationInfo(
+            PointF Center,
+            PointF PreviousCenter,
+            double Scale,
+            double Rotation,
+            double ScaleTotal,
+            double RotationTotal,
+            int TouchesCount);
 
         /// <summary>
         /// In pixels inside parent view,
         /// 0,0 is top-left corner of the view
         /// </summary>
-        public class DistanceInfo
+        public record DistanceInfo
         {
             public DistanceInfo()
             {
@@ -197,8 +210,6 @@
                 Start = PointF.Zero;
                 End = PointF.Zero;
             }
-
-
 
             /// <summary>
             /// In pixels inside parent view,

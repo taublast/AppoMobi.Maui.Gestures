@@ -10,5 +10,5 @@ public enum TouchActionResult
     Panning,
     //Panned,
     //Swiped,
-    Pinched
+    Wheel
 }
