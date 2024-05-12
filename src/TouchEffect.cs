@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 
@@ -13,7 +13,7 @@ namespace AppoMobi.Maui.Gestures
 
         }
 
-        public class ScaleEventArgs : EventArgs
+        public class WheelEventArgs : EventArgs
         {
             public float Delta { get; set; }
 
@@ -31,6 +31,8 @@ namespace AppoMobi.Maui.Gestures
         /// How much finger can move between DOWN and UP for the gestured to be still considered as TAPPED. In points, not pixels.
         /// </summary>
         public static float TappedWhenMovedThresholdPoints = 20f;
+
+        protected MultitouchTracker _manipulationTracker = new();
 
         public static Dictionary<string, DateTime> TapLocks = new();
 
@@ -490,6 +492,7 @@ namespace AppoMobi.Maui.Gestures
 
         public bool IsPressed { get; protected set; }
 
+        private bool _maybeTapped;
 
         private bool _IsLongPressing;
         public bool IsLongPressing
@@ -686,7 +689,6 @@ namespace AppoMobi.Maui.Gestures
                     if (action == TouchActionType.Entered
                         || action == TouchActionType.Pressed)
                     {
-
                         _lastArgs = null;
                         _thresholdTap = TappedWhenMovedThresholdPoints * Density;
 
@@ -694,6 +696,19 @@ namespace AppoMobi.Maui.Gestures
                         lockLongPress = false;
 
                         args.StartingLocation = args.Location;
+
+                        if (_lastArgs == null || !_lastArgs.IsInContact)
+                        {
+                            _maybeTapped = true;
+                            _manipulationTracker.Restart(args.Id, args.Location);
+                            //Debug.WriteLine("[TOUCH] Restarted tracker!");
+                        }
+                        else
+                        {
+                            //more than 1 finger is down
+                            _maybeTapped = false;
+                        }
+
                         args.IsInContact = true;
 
                         lastDown = args;
@@ -719,40 +734,34 @@ namespace AppoMobi.Maui.Gestures
 
                     }
 
-
                     TouchActionEventArgs.FillDistanceInfo(args, _lastArgs);
 
-                    if (action == TouchActionType.Pinch)
+                    if (action == TouchActionType.Wheel)
                     {
                         lockLongPress = true;
                         if (listener != null)
                         {
-                            SendAction(listener, TouchActionType.Pinch, args, TouchActionResult.Pinched);
+                            SendAction(listener, TouchActionType.Wheel, args, TouchActionResult.Wheel);
                         }
 
                         SendPinchCommand(args);
 
                         Pinched?.Invoke(Element, args);
-                        LastActionResult = TouchActionResult.Pinched;
+                        LastActionResult = TouchActionResult.Wheel;
                     }
-                    //else if (action == TouchActionType.SwipeLeft
-                    //         || action == TouchActionType.SwipeRight
-                    //         || action == TouchActionType.SwipeTop
-                    //         || action == TouchActionType.SwipeBottom)
-                    //{
-                    //    lockLongPress = true;
-                    //    if (listener != null)
-                    //    {
-                    //        SendAction(listener, action, args, TouchActionResult.Swiped);
-                    //    }
-                    //    Swiped?.Invoke(element, args);
-                    //    LastActionResult = TouchActionResult.Swiped;
-                    //}
+
                     else if (action == TouchActionType.Moved
                              || action == TouchActionType.PanEnded
                              || action == TouchActionType.PanChanged
                              || action == TouchActionType.PanStarted)
                     {
+
+                        var manipulation = _manipulationTracker.AddMovement(args.Id, args.Location);
+                        if (manipulation != null)
+                        {
+                            args.Manipulation = manipulation;
+                            //Debug.WriteLine($"[TOUCH] added movement, S: {args.Manipulation.Scale:0.00}/{args.Manipulation.ScaleTotal:0.00} R: {args.Manipulation.Rotation:0.00}/{args.Manipulation.RotationTotal:0.00}, touches {args.Manipulation.TouchesCount}");
+                        }
 
                         if (action != TouchActionType.Moved)
                         {
@@ -789,69 +798,76 @@ namespace AppoMobi.Maui.Gestures
                         || action == TouchActionType.Exited
                        )
                     {
-                        args.IsInContact = false;
+                        args.IsInContact = !(args.NumberOfTouches < 2);
 
-                        var totalX = Density * args.Distance.Total.X;
-                        var totalY = Density * args.Distance.Total.Y;
-
-                        DisableLongPressingTimer();
-
-                        //TAPPED
-                        if (//!IsPanning && 
-                            !IsLongPressing
-                           && lastDown != null
-                          && action == TouchActionType.Released
-                          && !lastDown.PreventDefault
-                          && Math.Abs(totalX) <= _thresholdTap && Math.Abs(totalY) <= _thresholdTap
-                           )
+                        if (args.IsInContact)
                         {
-                            if (listener != null)
-                            {
-                                //tapped
-                                SendAction(listener, action, args, TouchActionResult.Tapped);
-                            }
-
-                            SendTappedCommand(args);
-                            var passView = element;
-                            if (PassView != null)
-                            {
-                                passView = PassView;
-                            }
-                            Tapped?.Invoke(passView, args);
-                            LastActionResult = TouchActionResult.Tapped;
-
-                            ////Attachable animation effects
-                            //if (this.Element is IAnimatable animator)
-                            //{
-                            //    var animate = GetAnimationView(Element);
-                            //    var animation = GetAnimationTapped(Element);
-                            //    if (animate is SkiaControl control && animation == SkiaTouchAnimation.Ripple)
-                            //    {
-                            //        control.PlayRippleAnimation(Colors.White, args.Location.X, args.Location.Y);
-                            //    }
-                            //    else if (Element is SkiaBaseView canvas && animation == SkiaTouchAnimation.Ripple)
-                            //    {
-                            //        canvas.PlayRippleAnimation(Colors.White, args.Location.X, args.Location.Y);
-                            //    }
-                            //}
-
+                            _maybeTapped = false;
                         }
+                        //Debug.WriteLine($"[TOUCH] touches: {args.NumberOfTouches} in contact: {args.IsInContact}");
 
-                        IsLongPressing = false;
-
-                        //PANNED
-                        if (IsPanning)
+                        if (!args.IsInContact)
                         {
-                            //LastActionResult = TouchActionResult.Panned;
-                            IsPanning = false;
-                            //if (args.NumberOfTouches < 2 && (args.Distance.Total.X != 0 || args.Distance.Total.Y != 0))
-                            //{
-                            //    if (listener != null)
-                            //    {
-                            //        SendAction(listener, action, args, TouchActionResult.Panned);
-                            //    }
-                            //    Panned?.Invoke(element, args);
-                            //}
+                            _manipulationTracker.Reset();
+
+                            var totalX = Density * args.Distance.Total.X;
+                            var totalY = Density * args.Distance.Total.Y;
+
+                            DisableLongPressingTimer();
+
+                            //TAPPED
+                            if (//!IsPanning && 
+                                !IsLongPressing
+                                && _maybeTapped
+                               && lastDown != null
+                              && action == TouchActionType.Released
+                              && !lastDown.PreventDefault
+                              && Math.Abs(totalX) <= _thresholdTap && Math.Abs(totalY) <= _thresholdTap
+                               )
+                            {
+                                if (listener != null)
+                                {
+                                    //tapped
+                                    SendAction(listener, action, args, TouchActionResult.Tapped);
+                                }
+
+                                SendTappedCommand(args);
+                                var passView = element;
+                                if (PassView != null)
+                                {
+                                    passView = PassView;
+                                }
+                                Tapped?.Invoke(passView, args);
+                                LastActionResult = TouchActionResult.Tapped;
+
+                                ////Attachable animation effects
+                                //if (this.Element is IAnimatable animator)
+                                //{
+                                //    var animate = GetAnimationView(Element);
+                                //    var animation = GetAnimationTapped(Element);
+                                //    if (animate is SkiaControl control && animation == SkiaTouchAnimation.Ripple)
+                                //    {
+                                //        control.PlayRippleAnimation(Colors.White, args.Location.X, args.Location.Y);
+                                //    }
+                                //    else if (Element is SkiaBaseView canvas && animation == SkiaTouchAnimation.Ripple)
+                                //    {
+                                //        canvas.PlayRippleAnimation(Colors.White, args.Location.X, args.Location.Y);
+                                //    }
+                                //}
+                            }
+
+                            IsLongPressing = false;
+
+                            //PANNED
+                            if (IsPanning)
+                            {
+                                IsPanning = false;
+                            }
+                        }
+                        else
+                        {
+                            //Multutouch
+                            _manipulationTracker.RemoveTouch(args.Id);
                         }
 
                         //UP
@@ -859,10 +875,9 @@ namespace AppoMobi.Maui.Gestures
                         {
                             SendAction(listener, action, args, TouchActionResult.Up);
                         }
+
                         Up?.Invoke(element, args);
                         LastActionResult = TouchActionResult.Up;
-
-                        //FingersCount--;
                     }
 
                     //Console.WriteLine($"[TOUCH] {LastActionResult} fingers {FingersCount}");

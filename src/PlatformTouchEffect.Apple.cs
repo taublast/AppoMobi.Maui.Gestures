@@ -16,7 +16,7 @@ namespace AppoMobi.Maui.Gestures
             try
             {
                 var args = new TouchActionEventArgs(id, actionType, point, null);
-                args.Pinch = Pinch;
+                args.Wheel = Wheel;
                 args.NumberOfTouches = CountFingers;
                 args.IsInsideView = isInsideView;
 
@@ -27,7 +27,6 @@ namespace AppoMobi.Maui.Gestures
             {
                 Console.WriteLine(e);
             }
-
         }
 
         public void FireEvent(long id, TouchActionType actionType, UITouch touch, double pinch = 0.0)

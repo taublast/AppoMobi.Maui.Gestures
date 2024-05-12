@@ -17,7 +17,7 @@
         //SwipeRight,
         //SwipeTop,
         //SwipeBottom,
-        Pinch
+        Wheel
     }
 
 }

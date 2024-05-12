@@ -69,15 +69,14 @@ namespace AppoMobi.Maui.Gestures
         }
 
         void FireEvent(int id, TouchActionType actionType,
-            PointF pointerLocation, float rotation = 0f)
+            PointF pointerLocation)
         {
 
             try
             {
                 var args = new TouchActionEventArgs(id, actionType, pointerLocation, null);//Element.BindingContext
 
-                args.Pinch = Pinch;
-                args.Rotated = rotation;
+                args.Wheel = Wheel;
                 args.NumberOfTouches = CountFingers;
                 args.IsInsideView = isInsideView;
 
