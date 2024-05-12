@@ -16,7 +16,7 @@
 
   <PropertyGroup>
     <!--<PackageReleaseNotes>Under construction</PackageReleaseNotes>-->
-    <Version>1.0.8.4</Version>
+    <Version>1.2.1.1</Version>
     <Title>AppoMobi.Maui.Gestures</Title>
     <Description>Gestures effect and helpers for .Net Maui</Description>
     <PackageTags>maui gestures</PackageTags>
@@ -61,14 +61,10 @@
   </ItemGroup>
 
   
-  <ItemGroup>
+  <!--<ItemGroup>
     <PackageReference Update="Microsoft.Maui.Controls" Version="8.0.7" />
-  </ItemGroup>
-
-  
-  <ItemGroup>
     <PackageReference Update="Microsoft.Maui.Controls.Compatibility" Version="8.0.7" />
-  </ItemGroup>
+  </ItemGroup>-->
   
 
 

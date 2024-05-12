@@ -697,16 +697,21 @@ namespace AppoMobi.Maui.Gestures
 
                         args.StartingLocation = args.Location;
 
+                        DisableLongPressingTimer();
+
                         if (_lastArgs == null || !_lastArgs.IsInContact)
                         {
                             _maybeTapped = true;
                             _manipulationTracker.Restart(args.Id, args.Location);
                             //Debug.WriteLine("[TOUCH] Restarted tracker!");
+
+                            EnableLongPressingTimer();
                         }
                         else
                         {
                             //more than 1 finger is down
                             _maybeTapped = false;
+                            IsLongPressing = false;
                         }
 
                         args.IsInContact = true;
@@ -714,9 +719,6 @@ namespace AppoMobi.Maui.Gestures
                         lastDown = args;
 
                         _wasLongPressing = false;
-
-                        DisableLongPressingTimer();
-                        EnableLongPressingTimer();
 
                         if (listener != null)
                         {
