@@ -522,7 +522,7 @@ namespace AppoMobi.Maui.Gestures
 
         private void OnLongPress()
         {
-            if (_onTimerBusy || lastDown == null || lockLongPress || IsPanning)
+            if (_onTimerBusy || lastDown == null || lockLongPress)
                 return;
 
             _onTimerBusy = true;
@@ -575,6 +575,8 @@ namespace AppoMobi.Maui.Gestures
 
         async void EnableLongPressingTimer()
         {
+            Debug.WriteLine("EnableLongPressingTimer");
+
             ctsLongPressingTime?.Cancel();
             ctsLongPressingTime = new();
 
@@ -594,6 +596,9 @@ namespace AppoMobi.Maui.Gestures
 
         void DisableLongPressingTimer()
         {
+            Debug.WriteLine("DisableLongPressingTimer");
+
+
             ctsLongPressingTime?.Cancel();
         }
 

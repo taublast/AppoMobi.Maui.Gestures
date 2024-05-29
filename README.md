@@ -4,6 +4,10 @@ Library for .Net MAUI to handle gestures. Can be consumed in Xaml and code-behin
 
 This library is used by [DrawnUi for .Net Maui](https://github.com/taublast/DrawnUi.Maui). 
 
+## What's New - 1.2.2.1
+* Longpressing sent while panning too, you have to check for panning yourself if you wish to ignore long pressing in that case.
+
+
 ## Features
 
 * Attachable .Net Maui effect
