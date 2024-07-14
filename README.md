@@ -1,16 +1,15 @@
 ﻿# AppoMobi.Maui.Gestures
 
-Library for .Net MAUI to handle gestures. Can be consumed in Xaml and code-behind. A nuget with the same name is available.
+Library for .NET MAUI to handle gestures. Can be consumed in Xaml and code-behind. A nuget with the same name is available.
 
-This library is used by [DrawnUi for .Net Maui](https://github.com/taublast/DrawnUi.Maui). 
+This library is used by [DrawnUI for .NET MAUI](https://github.com/taublast/DrawnUi.Maui). 
 
-## What's New - 1.2.2.1
-* Longpressing sent while panning too, you have to check for panning yourself if you wish to ignore long pressing in that case.
-
+## What's New - 1.8.1.2
+* Tapped cannot trigger after Longpressing until another finger is Down.
 
 ## Features
 
-* Attachable .Net Maui effect
+* Attachable .NET MAUI effect
 * Multi-touch
 * Customizable touch mode for cooperation with other views
 * Report velocity, distance, time, etc	
@@ -122,3 +121,5 @@ TouchEffect.TappedWhenMovedThresholdPoints = 10f;
 TouchEffect.LongPressTimeMsDefault = 1500;
 ```
 
+## Previously - 1.2.2.1
+* Longpressing sent while panning too, you have to check for panning yourself if you wish to ignore long pressing in that case.

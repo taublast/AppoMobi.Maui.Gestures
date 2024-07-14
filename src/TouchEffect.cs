@@ -704,6 +704,9 @@ namespace AppoMobi.Maui.Gestures
 
                         DisableLongPressingTimer();
 
+                        _maybeTapped = false;
+                        IsLongPressing = false;
+
                         if (_lastArgs == null || !_lastArgs.IsInContact)
                         {
                             _maybeTapped = true;
@@ -711,12 +714,6 @@ namespace AppoMobi.Maui.Gestures
                             //Debug.WriteLine("[TOUCH] Restarted tracker!");
 
                             EnableLongPressingTimer();
-                        }
-                        else
-                        {
-                            //more than 1 finger is down
-                            _maybeTapped = false;
-                            IsLongPressing = false;
                         }
 
                         args.IsInContact = true;
@@ -863,7 +860,7 @@ namespace AppoMobi.Maui.Gestures
                                 //}
                             }
 
-                            IsLongPressing = false;
+                            //IsLongPressing = false;
 
                             //PANNED
                             if (IsPanning)

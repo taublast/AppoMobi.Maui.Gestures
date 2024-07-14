@@ -16,9 +16,9 @@
 
   <PropertyGroup>
     <!--<PackageReleaseNotes>Under construction</PackageReleaseNotes>-->
-    <Version>1.2.2.1</Version>
+    <Version>1.8.1.2</Version>
     <Title>AppoMobi.Maui.Gestures</Title>
-    <Description>Gestures effect and helpers for .Net Maui</Description>
+    <Description>Gestures effect and helpers for .NET MAUI</Description>
     <PackageTags>maui gestures</PackageTags>
     <Authors>Nick Kovalsky aka AppoMobi</Authors>
     <Copyright>(c) AppoMobi, 2022 - present day</Copyright>
