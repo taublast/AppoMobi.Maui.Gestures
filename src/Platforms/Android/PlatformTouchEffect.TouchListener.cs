@@ -9,8 +9,6 @@ public partial class PlatformTouchEffect
 {
     public class TouchListener : GestureDetector.SimpleOnGestureListener, View.IOnTouchListener
     {
-
-
         public TouchListener(PlatformTouchEffect platformEffect, Context ctx)
         {
             _parent = platformEffect; //todo remove on dispose
@@ -22,24 +20,16 @@ public partial class PlatformTouchEffect
         void LockInput(View sender)
         {
             sender.Parent?.RequestDisallowInterceptTouchEvent(true);
-            //    Debug.WriteLine($"[****MODE2*] LOCKED");
         }
 
         void UnlockInput(View sender)
         {
             sender.Parent?.RequestDisallowInterceptTouchEvent(false);
-            //      Debug.WriteLine($"[****MODE2*] UN-LOCKED");
         }
-
-
-
-        DateTime _lastEventTime = DateTime.Now;
 
         public bool OnTouch(View sender, MotionEvent motionEvent)
         {
             //System.Diagnostics.Debug.WriteLine($"[TOUCH] Android: {motionEvent.Action} {motionEvent.RawY:0}");
-
-            //var _parent = GetParent(sender);
 
             if (_parent.FormsEffect.TouchMode == TouchHandlingStyle.Disabled)
                 return false;
@@ -60,66 +50,50 @@ public partial class PlatformTouchEffect
             {
                 switch (motionEvent.ActionMasked)
                 {
+                    //detect additional pointers (i.e., fingers) going down on the screen after the initial touch.
+                    //typically used in multi-touch scenarios when multiple fingers are involved.
+                    case MotionEventActions.PointerDown:
+                    _parent.FireEvent(id, TouchActionType.Pressed, coorsInsideView);
+                    break;
 
-                //detect additional pointers (i.e., fingers) going down on the screen after the initial touch.
-                //typically used in multi-touch scenarios when multiple fingers are involved.
-                case MotionEventActions.PointerDown:
-                _parent.FireEvent(id, TouchActionType.Pressed, coorsInsideView);
-                break;
+                    case MotionEventActions.Down:
+                    //case MotionEventActions.PointerDown:
+                    if (_parent.FormsEffect.TouchMode == TouchHandlingStyle.Lock)
+                        LockInput(sender);
+                    else
+                        UnlockInput(sender);
+                    _parent.FireEvent(id, TouchActionType.Pressed, coorsInsideView);
+                    break;
 
-                case MotionEventActions.Down:
-                //case MotionEventActions.PointerDown:
+                    case MotionEventActions.Move:
+                    // Multiple Move events are bundled, so handle them in a loop
+                    for (pointerIndex = 0; pointerIndex < motionEvent.PointerCount; pointerIndex++)
+                    {
+                        id = motionEvent.GetPointerId(pointerIndex);
+                        coorsInsideView = new PointF(motionEvent.GetX(pointerIndex), motionEvent.GetY(pointerIndex));
+                        _parent.FireEvent(id, TouchActionType.Moved, coorsInsideView);
+                    }
+                    break;
 
-                if (_parent.FormsEffect.TouchMode == TouchHandlingStyle.Lock)
-                    LockInput(sender);
-                else
+                    case MotionEventActions.PointerUp:
+                    _parent.FireEvent(id, TouchActionType.Released,
+                        coorsInsideView);
+                    break;
+
+                    case MotionEventActions.Up:
                     UnlockInput(sender);
+                    _parent.FireEvent(id, TouchActionType.Released,
+                        coorsInsideView);
+                    break;
 
-                _parent.FireEvent(id, TouchActionType.Pressed, coorsInsideView);
+                    case MotionEventActions.Cancel:
+                    UnlockInput(sender);
+                    _parent.FireEvent(id, TouchActionType.Cancelled, coorsInsideView);
+                    break;
 
-                break;
-
-                case MotionEventActions.Move:
-
-                // Multiple Move events are bundled, so handle them in a loop
-                for (pointerIndex = 0; pointerIndex < motionEvent.PointerCount; pointerIndex++)
-                {
-                    id = motionEvent.GetPointerId(pointerIndex);
-
-                    coorsInsideView = new PointF(motionEvent.GetX(pointerIndex), motionEvent.GetY(pointerIndex));
-
-                    _parent.FireEvent(id, TouchActionType.Moved, coorsInsideView);
-                }
-
-                break;
-
-                case MotionEventActions.PointerUp:
-                _parent.FireEvent(id, TouchActionType.Released,
-                    coorsInsideView);
-                break;
-
-                case MotionEventActions.Up:
-                UnlockInput(sender);
-
-                _parent.FireEvent(id, TouchActionType.Released,
-                    coorsInsideView);
-
-                break;
-                case MotionEventActions.Cancel:
-
-                //Debug.WriteLine($"[TOUCH] Android native: {motionEvent.ActionMasked} - {_parent.capture}");
-
-                UnlockInput(sender);
-
-                _parent.FireEvent(id, TouchActionType.Cancelled, coorsInsideView);
-
-                break;
-
-                default:
-
-                UnlockInput(sender);
-
-                break;
+                    default:
+                    UnlockInput(sender);
+                    break;
 
                 }
             }

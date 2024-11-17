@@ -1,6 +1,5 @@
 ﻿using CoreGraphics;
 using Foundation;
-using System.Diagnostics;
 using UIKit;
 
 namespace AppoMobi.Maui.Gestures
@@ -10,7 +9,7 @@ namespace AppoMobi.Maui.Gestures
 
         volatile PlatformTouchEffect _parent;
         UIView _view;
-        
+
         private bool _disposed;
 
         public TouchRecognizer(UIView view, PlatformTouchEffect parent)
@@ -19,51 +18,22 @@ namespace AppoMobi.Maui.Gestures
             _parent = parent;
         }
 
-
         public void Detach()
         {
-            _view.RemoveGestureRecognizer(this);
+            try
+            {
+                _view?.RemoveGestureRecognizer(this);
+            }
+            catch (Exception e)
+            {
+                //might still crash when detaching from a destroyed view
+                Console.WriteLine(e);
+            }
         }
 
         public void Attach()
         {
-            _view.AddGestureRecognizer(this);
-
-            // recognizer = new UIPinchGestureRecognizer(() =>
-            // {
-            //
-            //     if (recognizer.NumberOfTouches == 2 && recognizer.State == UIGestureRecognizerState.Began)
-            //     {
-            //         _parent.CountFingers = 1;
-            //         _parent.FireEvent(0, TouchActionType.Cancelled, _lastPoint);
-            //     }
-            //
-            //     _parent.CountFingers = (int)recognizer.NumberOfTouches;
-            //     if (recognizer.NumberOfTouches < 2 || recognizer.State == UIGestureRecognizerState.Ended || recognizer.State == UIGestureRecognizerState.Cancelled)
-            //     {
-            //         _parent.FireEvent(0, TouchActionType.Cancelled, _lastPoint);
-            //         return;
-            //     }
-            //
-            //     CGPoint point1 = recognizer.LocationOfTouch(0, recognizer.View);
-            //     CGPoint point2 = recognizer.LocationOfTouch(1, recognizer.View);
-            //
-            //     // Calculate the center point
-            //     var centerX = (point1.X + point2.X) / 2;
-            //     var centerY = (point1.Y + point2.Y) / 2;
-            //
-            //     _parent.Pinch = new TouchEffect.ScaleEventArgs()
-            //     {
-            //         Scale = (float)recognizer.Scale,
-            //         Center = new((float)centerX * TouchEffect.Density, (float)centerY * TouchEffect.Density)
-            //     };
-            //
-            //     _lastPoint = new PointF((float)point1.X, (float)point1.Y);
-            //     _parent.FireEvent(0, TouchActionType.Pinch, _lastPoint);
-            //
-            // });
-            //
-            // _view.AddGestureRecognizer(recognizer);
+            _view?.AddGestureRecognizer(this);
         }
 
         PointF _lastPoint;
@@ -91,13 +61,6 @@ namespace AppoMobi.Maui.Gestures
         {
             ShouldBeRequiredToFailBy = ShouldFailLocked;
             ShouldRecognizeSimultaneously = ShouldRecLocked;
-
-            //if (UIDevice.CurrentDevice.CheckSystemVersion(13, 4))
-            //{
-            //    ShouldReceiveEvent = ShouldEvent;
-            //}
-
-            //  Debug.WriteLine("[TOUCH] LOCKED!");
         }
 
         private bool ShouldEvent(UIGestureRecognizer gesturerecognizer, UIEvent @event)
@@ -114,8 +77,6 @@ namespace AppoMobi.Maui.Gestures
 
             ShouldBeRequiredToFailBy = null;
             ShouldRecognizeSimultaneously = null;
-
-            //  Debug.WriteLine("[TOUCH] UNlocked!");
         }
 
         private bool IsViewOrAncestorHidden(UIView view)
@@ -138,8 +99,6 @@ namespace AppoMobi.Maui.Gestures
                 return;
             }
 
-            //Console.WriteLine("TouchesBegan");
-
             _parent.CountFingers = (int)NumberOfTouches;
 
 
@@ -149,8 +108,6 @@ namespace AppoMobi.Maui.Gestures
                 _parent.FireEvent(id, TouchActionType.Pressed, touch);
             }
 
-            // Save the setting of the Capture property
-            //capture = TouchEffect.Capture;
             _parent.isInsideView = true;
 
             if (_parent.FormsEffect.TouchMode == TouchHandlingStyle.Lock)
@@ -170,8 +127,6 @@ namespace AppoMobi.Maui.Gestures
 
         public override void TouchesMoved(NSSet touches, UIEvent evt)
         {
-            //Console.WriteLine("TouchesMoved");
-
             base.TouchesMoved(touches, evt);
 
             _parent.CountFingers = (int)NumberOfTouches;
@@ -234,38 +189,6 @@ namespace AppoMobi.Maui.Gestures
                 return false; //todo if TRUE allowes scrollView to cancel our touches
             }
         }
-
-        //void CheckForBoundaryHop(UITouch touch)
-        //{
-        //	long id = ((IntPtr)touch.Handle).ToInt64();
-
-        //	// TODO: Might require converting to a List for multiple hits
-        //	TouchRecognizer touchEffectHit = null;
-
-        //	foreach (UIView view in viewDictionary.Keys)
-        //	{
-        //		try
-        //		{
-        //			CGPoint location = touch.LocationInView(view);
-        //			if (new CGRect(new CGPoint(), view.Frame.Size).Contains(location))
-        //			{
-        //				touchEffectHit = viewDictionary[view];
-        //			}
-        //		}
-        //		catch (Exception e)
-        //		{
-        //			continue; //view might be disposed
-        //		}
-        //	}
-
-        //	if (touchEffectHit != idToEffectDictionary[id])
-        //	{
-        //		if (touchEffectHit == null)
-        //		{
-        //			idToEffectDictionary[id] = null;
-        //		}
-        //	}
-        //}
 
         bool CheckPointIsInsideRecognizer(PointF xfPoint, TouchRecognizer recognizer)
         {

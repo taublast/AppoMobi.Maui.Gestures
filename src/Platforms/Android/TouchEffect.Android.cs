@@ -20,7 +20,6 @@ namespace AppoMobi.Maui.Gestures
                         var imm = (InputMethodManager)Platform.AppContext.GetSystemService(Context.InputMethodService);
                         var token = Platform.CurrentActivity?.Window?.DecorView?.WindowToken;
                         imm.HideSoftInputFromWindow(token, 0);
-
                     }
                     catch (Exception e)
                     {

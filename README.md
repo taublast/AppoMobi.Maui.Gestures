@@ -4,8 +4,11 @@ Library for .NET MAUI to handle gestures. Can be consumed in Xaml and code-behin
 
 This library is used by [DrawnUI for .NET MAUI](https://github.com/taublast/DrawnUi.Maui). 
 
-## What's New - 1.8.1.2
-* Tapped cannot trigger after Longpressing until another finger is Down.
+## What's New - 1.9.1.1
+
+* Fixed crash when detaching from a destroyed view on iOS
+* Dropped .NET 7 support
+* Compiled for .NET 9 and .NET 8
 
 ## Features
 
@@ -121,5 +124,6 @@ TouchEffect.TappedWhenMovedThresholdPoints = 10f;
 TouchEffect.LongPressTimeMsDefault = 1500;
 ```
 
-## Previously - 1.2.2.1
+## Previously
 * Longpressing sent while panning too, you have to check for panning yourself if you wish to ignore long pressing in that case.
+* Tapped cannot trigger after Longpressing until another finger is Down.
