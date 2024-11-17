@@ -106,18 +106,32 @@ namespace AppoMobi.Maui.Gestures
 
         void OnPointerReleased(object sender, PointerRoutedEventArgs args)
         {
-            activePointerIds.Remove(args.Pointer.PointerId);
-            FireEvent(sender, TouchActionType.Released, args);
-            _pressed = activePointerIds.Count > 0;
+            try
+            {
+                activePointerIds.Remove(args.Pointer.PointerId);
+                FireEvent(sender, TouchActionType.Released, args);
+                _pressed = activePointerIds.Count > 0;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
         }
 
         void OnPointerExited(object sender, PointerRoutedEventArgs args)
         {
-            if (_pressed)
+            try
             {
-                activePointerIds.Remove(args.Pointer.PointerId);
-                _pressed = activePointerIds.Count > 0;
-                FireEvent(sender, TouchActionType.Exited, args);
+                if (_pressed)
+                {
+                    activePointerIds.Remove(args.Pointer.PointerId);
+                    _pressed = activePointerIds.Count > 0;
+                    FireEvent(sender, TouchActionType.Exited, args);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
             }
         }
 
@@ -157,7 +171,6 @@ namespace AppoMobi.Maui.Gestures
             {
                 Console.WriteLine(ex);
             }
-
         }
     }
 }

@@ -5,8 +5,6 @@ namespace AppoMobi.Maui.Gestures
 
     public partial class PlatformTouchEffect : PlatformEffect
     {
-
-
         Android.Views.View _androidView;
 
         protected override void OnAttached()
@@ -30,7 +28,6 @@ namespace AppoMobi.Maui.Gestures
 
         }
 
-
         private void OnHandlerChanged(object sender, EventArgs e)
         {
             if (sender is Element element)
@@ -53,10 +50,9 @@ namespace AppoMobi.Maui.Gestures
 
             if (FormsEffect != null)
             {
-
                 FormsEffect.Disposing -= OnFormsDisposing;
 
-                FormsEffect?.Dispose();
+                FormsEffect.Dispose();
                 FormsEffect = null;
             }
 
@@ -71,7 +67,6 @@ namespace AppoMobi.Maui.Gestures
         void FireEvent(int id, TouchActionType actionType,
             PointF pointerLocation)
         {
-
             try
             {
                 var args = new TouchActionEventArgs(id, actionType, pointerLocation, null);//Element.BindingContext
