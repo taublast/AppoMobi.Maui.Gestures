@@ -22,7 +22,7 @@
 
   <PropertyGroup>
     <!--<PackageReleaseNotes>Under construction</PackageReleaseNotes>-->
-    <Version>1.9.2.4</Version>
+    <Version>1.9.2.5</Version>
     <Title>AppoMobi.Maui.Gestures</Title>
     <Description>Gestures effect and helpers for .NET MAUI</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
