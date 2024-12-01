@@ -774,13 +774,12 @@ namespace AppoMobi.Maui.Gestures
                         }
 
                         if (
-                            action == TouchActionType.PanEnded ||
-                            action == TouchActionType.Moved)
+                            action == TouchActionType.PanEnded || action == TouchActionType.Moved)
                         {
 
                             if (!args.IsInsideView && !Draggable)
                             {
-                                action = TouchActionType.Cancelled;
+                                action = TouchActionType.Exited;
                             }
                             else
                             {
@@ -874,14 +873,23 @@ namespace AppoMobi.Maui.Gestures
                             _manipulationTracker.RemoveTouch(args.Id);
                         }
 
-                        //UP
-                        if (listener != null)
+                        if (TouchMode == TouchHandlingStyle.Lock
+                            && action == TouchActionType.Exited)
                         {
-                            SendAction(listener, action, args, TouchActionResult.Up);
+                            //what to do what to do.. (c) Matthew
+                        }
+                        else
+                        {
+                            //UP
+                            if (listener != null)
+                            {
+                                SendAction(listener, action, args, TouchActionResult.Up);
+                            }
+
+                            Up?.Invoke(element, args);
+                            LastActionResult = TouchActionResult.Up;
                         }
 
-                        Up?.Invoke(element, args);
-                        LastActionResult = TouchActionResult.Up;
                     }
 
                     //Console.WriteLine($"[TOUCH] {LastActionResult} fingers {FingersCount}");
@@ -909,7 +917,6 @@ namespace AppoMobi.Maui.Gestures
                     //TouchAction?.Invoke(element, args);
 
                     #endregion
-
 
                     _lastArgs = args;
 

@@ -4,11 +4,10 @@ Library for .NET MAUI to handle gestures. Can be consumed in Xaml and code-behin
 
 This library is used by [DrawnUI for .NET MAUI](https://github.com/taublast/DrawnUi.Maui). 
 
-## What's New - 1.9.1.1
+## What's New - 1.9.2.1
 
-* Fixed crash when detaching from a destroyed view on iOS
-* Dropped .NET 7 support
-* Compiled for .NET 9 and .NET 8
+* Fixed TouchMode.Locked on iOS
+* Removed TouchMode.Share until it's fully implemented on all platforms
 
 ## Features
 

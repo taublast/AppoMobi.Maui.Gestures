@@ -1,6 +1,5 @@
 ﻿using CoreGraphics;
 using Foundation;
-using ObjCRuntime;
 using UIKit;
 
 namespace AppoMobi.Maui.Gestures
@@ -23,7 +22,7 @@ namespace AppoMobi.Maui.Gestures
 
         void CheckLockPan()
         {
-            if (_disposed || _parent==null || _parent.FormsEffect==null)
+            if (_disposed || _parent == null || _parent.FormsEffect == null)
                 return;
 
             if (_parent.FormsEffect.TouchMode == TouchHandlingStyle.Lock)
@@ -31,17 +30,17 @@ namespace AppoMobi.Maui.Gestures
                 AttachPanning();
             }
             else
-                if (_childPanGestureRecognizer!=null)
-                {
-                    DetachPanning();
-                }
+                if (_childPanGestureRecognizer != null)
+            {
+                DetachPanning();
+            }
         }
 
         private UIPanGestureRecognizer _childPanGestureRecognizer; // Reference to child UIPanGestureRecognizer
 
         void AttachPanning()
         {
-            if (_childPanGestureRecognizer!=null)
+            if (_childPanGestureRecognizer != null)
                 return;
 
             _childPanGestureRecognizer = new UIPanGestureRecognizer(HandlePan)
@@ -58,7 +57,7 @@ namespace AppoMobi.Maui.Gestures
             if (_childPanGestureRecognizer != null)
             {
                 _view?.RemoveGestureRecognizer(_childPanGestureRecognizer);
-                _childPanGestureRecognizer.Delegate=null;
+                _childPanGestureRecognizer.Delegate = null;
                 _childPanGestureRecognizer = null;
             }
         }
@@ -82,7 +81,7 @@ namespace AppoMobi.Maui.Gestures
             {
                 _view?.RemoveGestureRecognizer(this);
 
-                DetachPanning();;
+                DetachPanning(); ;
             }
             catch (Exception e)
             {
@@ -190,11 +189,11 @@ namespace AppoMobi.Maui.Gestures
             {
                 LockTouch();
             }
-            else
-            if (_parent.FormsEffect.TouchMode == TouchHandlingStyle.Share)
-            {
-                ShareTouch();
-            }
+            //else
+            //if (_parent.FormsEffect.TouchMode == TouchHandlingStyle.Share)
+            //{
+            //    ShareTouch();
+            //}
             else
             {
                 UnlockTouch();
