@@ -57,7 +57,8 @@
                 PointF deltaDistance;
                 float deltaSeconds;
 
-                if (current.Distance.Delta.X == 0 && current.Distance.Delta.Y == 0 && (current.Type == TouchActionType.Released || current.Type == TouchActionType.Cancelled || current.Type == TouchActionType.Exited))
+                if (current.Distance.Delta.X == 0 && current.Distance.Delta.Y == 0 && (current.Type == TouchActionType.Released
+                        || current.Type == TouchActionType.Cancelled || current.Type == TouchActionType.Exited))
                 {
                     //we gonna recalc velocity based on this event time, usually this is the case of finger released
 

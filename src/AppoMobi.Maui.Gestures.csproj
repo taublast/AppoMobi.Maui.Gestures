@@ -1,7 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net8.0;net8.0-android;net8.0-ios;net8.0-maccatalyst;</TargetFrameworks>
+        <TargetFrameworks>
+            net8.0;
+            net8.0-android34.0;
+            net8.0-ios17.0;
+            net8.0-maccatalyst17.0;
+        </TargetFrameworks>
 		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net8.0-windows10.0.19041.0;</TargetFrameworks>
 		<UseMaui>true</UseMaui>
 		<SingleProject>true</SingleProject>
@@ -17,7 +22,7 @@
 
   <PropertyGroup>
     <!--<PackageReleaseNotes>Under construction</PackageReleaseNotes>-->
-    <Version>1.9.2.2</Version>
+    <Version>1.9.2.5</Version>
     <Title>AppoMobi.Maui.Gestures</Title>
     <Description>Gestures effect and helpers for .NET MAUI</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -34,14 +39,8 @@
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
-    <ItemGroup>
-        <!-- ... -->
-        <PackageReference Include="NuGet.Build.Tasks.Pack" Version="6.12.1" PrivateAssets="all" />
-        <!-- ... -->
-    </ItemGroup>
-    
   <ItemGroup>
-      
+
 		<PackageReference Include="AppoMobi.Specials" Version="8.0.3" />
 	</ItemGroup>
 
@@ -57,7 +56,7 @@
     <None Include="**\**\*.Apple.cs" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
   </ItemGroup>
 
-  
+
   <ItemGroup>
     <None Include="..\icon128.png">
       <Pack>True</Pack>
@@ -69,12 +68,12 @@
     </None>
   </ItemGroup>
 
-  
+
   <!--<ItemGroup>
     <PackageReference Update="Microsoft.Maui.Controls" Version="8.0.7" />
     <PackageReference Update="Microsoft.Maui.Controls.Compatibility" Version="8.0.7" />
   </ItemGroup>-->
-  
+
 
 
 </Project>
