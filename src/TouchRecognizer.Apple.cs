@@ -1,10 +1,11 @@
 ﻿using CoreGraphics;
 using Foundation;
+using ObjCRuntime;
 using UIKit;
 
 namespace AppoMobi.Maui.Gestures
 {
-    class TouchRecognizer : UIGestureRecognizer
+    class TouchRecognizer : UIGestureRecognizer, IUIGestureRecognizerDelegate
     {
 
         volatile PlatformTouchEffect _parent;
@@ -18,11 +19,70 @@ namespace AppoMobi.Maui.Gestures
             _parent = parent;
         }
 
+        #region Lock Pan
+
+        void CheckLockPan()
+        {
+            if (_disposed || _parent==null || _parent.FormsEffect==null)
+                return;
+
+            if (_parent.FormsEffect.TouchMode == TouchHandlingStyle.Lock)
+            {
+                AttachPanning();
+            }
+            else
+                if (_childPanGestureRecognizer!=null)
+                {
+                    DetachPanning();
+                }
+        }
+
+        private UIPanGestureRecognizer _childPanGestureRecognizer; // Reference to child UIPanGestureRecognizer
+
+        void AttachPanning()
+        {
+            if (_childPanGestureRecognizer!=null)
+                return;
+
+            _childPanGestureRecognizer = new UIPanGestureRecognizer(HandlePan)
+            {
+                CancelsTouchesInView = false, // Allow touches to propagate
+                Delegate = this
+            };
+            _view.AddGestureRecognizer(_childPanGestureRecognizer);
+        }
+
+
+        void DetachPanning()
+        {
+            if (_childPanGestureRecognizer != null)
+            {
+                _view?.RemoveGestureRecognizer(_childPanGestureRecognizer);
+                _childPanGestureRecognizer.Delegate=null;
+                _childPanGestureRecognizer = null;
+            }
+        }
+
+        /// <summary>
+        /// Handles the pan gesture action.
+        /// </summary>
+        /// <param name="gesture">The UIPanGestureRecognizer triggering the action.</param>
+        private void HandlePan(UIPanGestureRecognizer gesture)
+        {
+            //this pan recognizer just catches staff for LOCK to block upper scrollviews
+            //Console.WriteLine($"UIPanGestureRecognizer State: {gesture.State}");
+        }
+
+
+        #endregion
+
         public void Detach()
         {
             try
             {
                 _view?.RemoveGestureRecognizer(this);
+
+                DetachPanning();;
             }
             catch (Exception e)
             {
@@ -33,18 +93,31 @@ namespace AppoMobi.Maui.Gestures
 
         public void Attach()
         {
+            this.CancelsTouchesInView = false; // Allow touches to propagate
             _view?.AddGestureRecognizer(this);
+
+            CheckLockPan();
         }
 
         PointF _lastPoint;
 
+        public override bool ShouldRequireFailureOfGestureRecognizer(UIGestureRecognizer otherGestureRecognizer)
+        {
+            return false;
+        }
+
         private bool ShouldRecLocked(UIGestureRecognizer gesturerecognizer, UIGestureRecognizer othergesturerecognizer)
         {
-            return true;
+            if (othergesturerecognizer == _childPanGestureRecognizer || othergesturerecognizer == this)
+            {
+                return true; // Allow simultaneous recognition with child UIPanGestureRecognizer
+            }
+
+            return false;
         }
         private bool ShouldRecUnlocked(UIGestureRecognizer gesturerecognizer, UIGestureRecognizer othergesturerecognizer)
         {
-            return false;
+            return true;
         }
 
         private bool ShouldFailLocked(UIGestureRecognizer gesturerecognizer, UIGestureRecognizer othergesturerecognizer)
@@ -55,7 +128,7 @@ namespace AppoMobi.Maui.Gestures
         void ShareTouch()
         {
             ShouldBeRequiredToFailBy = ShouldRecUnlocked;
-            ShouldRecognizeSimultaneously = ShouldRecLocked;
+            ShouldRecognizeSimultaneously = ShouldRecUnlocked;
         }
         void LockTouch()
         {
@@ -88,6 +161,7 @@ namespace AppoMobi.Maui.Gestures
             return view.Hidden || view.Alpha == 0 || IsViewOrAncestorHidden(view.Superview);
         }
 
+
         // touches = touches of interest; evt = all touches of type UITouch
         public override void TouchesBegan(NSSet touches, UIEvent evt)
         {
@@ -109,6 +183,8 @@ namespace AppoMobi.Maui.Gestures
             }
 
             _parent.isInsideView = true;
+
+            CheckLockPan();
 
             if (_parent.FormsEffect.TouchMode == TouchHandlingStyle.Lock)
             {
@@ -180,14 +256,6 @@ namespace AppoMobi.Maui.Gestures
 
             UnlockTouch();
 
-        }
-
-        public override bool CancelsTouchesInView
-        {
-            get
-            {
-                return false; //todo if TRUE allowes scrollView to cancel our touches
-            }
         }
 
         bool CheckPointIsInsideRecognizer(PointF xfPoint, TouchRecognizer recognizer)

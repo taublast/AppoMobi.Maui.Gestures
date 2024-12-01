@@ -664,7 +664,7 @@ namespace AppoMobi.Maui.Gestures
         {
             listener.OnGestureEvent(action, args, result);
 
-            //System.Diagnostics.Debug.WriteLine($"[TOUCH] Sent {action} {result} y {args.Location.Y:0}"); //x,y {args.Location.X:0}, {args.Location.Y:0} inside: {isInsideView} 
+            //System.Diagnostics.Debug.WriteLine($"[TOUCH] Sent {action} {result} y {args.Location.Y:0}"); //x,y {args.Location.X:0}, {args.Location.Y:0} inside: {isInsideView}
 
         }
 
@@ -687,7 +687,7 @@ namespace AppoMobi.Maui.Gestures
                         listener = null;
                     }
 
-                    //System.Diagnostics.Debug.WriteLine($"[TOUCH] Got {args.Type} "); //x,y {args.Location.X:0}, {args.Location.Y:0} inside: {isInsideView} 
+                    //System.Diagnostics.Debug.WriteLine($"[TOUCH] Got {args.Type} "); //x,y {args.Location.X:0}, {args.Location.Y:0} inside: {isInsideView}
 
                     var action = args.Type;
 
@@ -820,7 +820,7 @@ namespace AppoMobi.Maui.Gestures
                             DisableLongPressingTimer();
 
                             //TAPPED
-                            if (//!IsPanning && 
+                            if (//!IsPanning &&
                                 !IsLongPressing
                                 && _maybeTapped
                                && lastDown != null
@@ -885,10 +885,10 @@ namespace AppoMobi.Maui.Gestures
                     }
 
                     //Console.WriteLine($"[TOUCH] {LastActionResult} fingers {FingersCount}");
-                    //advise client with some logic.. 
+                    //advise client with some logic..
 
 
-                    if (//args.NumberOfTouches == 1 && 
+                    if (//args.NumberOfTouches == 1 &&
                         (args.Distance.Delta.X != 0 || args.Distance.Delta.Y != 0)
                         && LastActionResult == TouchActionResult.Panning)
                     {
