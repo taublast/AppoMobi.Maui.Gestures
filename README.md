@@ -2,19 +2,19 @@
 
 Library for .NET MAUI to handle gestures. Can be consumed in Xaml and code-behind. A nuget with the same name is available.
 
-This library is used by [DrawnUI for .NET MAUI](https://github.com/taublast/DrawnUi.Maui). 
+This library is used by [DrawnUI for .NET MAUI](https://github.com/taublast/DrawnUi.Maui).
 
-## What's New - 1.9.2.1
+## What's New - 1.9.2.2
 
-* Fixed TouchMode.Locked on iOS
-* Removed TouchMode.Share until it's fully implemented on all platforms
+* Fixed crash on iOS with some MAUI workloads versions
+* Compiled for .NET 8
 
 ## Features
 
 * Attachable .NET MAUI effect
 * Multi-touch
 * Customizable touch mode for cooperation with other views
-* Report velocity, distance, time, etc	
+* Report velocity, distance, time, etc
 * All data uses pixels on every platform for better precision
 
 ## Gestures
@@ -46,9 +46,9 @@ Getures are handled by a Maui Effect. You can just attach properties that would 
 #### Xaml
 
 ```xml
-<Label Text="Hello World!" 
-	    touch:TouchEffect.CommandLongPressing="{Binding Source={x:Reference ThisPage}, Path=BindingContext.CommandGoToAnotherPage}" 
-	    touch:TouchEffect.CommandTapped="{Binding Source={x:Reference ThisPage}, Path=BindingContext.CommandGoToAnotherPage}" 
+<Label Text="Hello World!"
+	    touch:TouchEffect.CommandLongPressing="{Binding Source={x:Reference ThisPage}, Path=BindingContext.CommandGoToAnotherPage}"
+	    touch:TouchEffect.CommandTapped="{Binding Source={x:Reference ThisPage}, Path=BindingContext.CommandGoToAnotherPage}"
 	    touch:TouchEffect.CommandTappedParameter="{Binding .}" />
 
 ```
@@ -91,7 +91,7 @@ The library passes 2 kinds of gesture type, the "raw" `TouchActionType` and the 
 
 __To note__: Since we detect multi-touch you could receive several Down/Up events, the first one would be recognizable with `NumberOfTouches` being at 1.
 
-You will receive all gesture-related data inside `TouchActionEventArgs args`. 
+You will receive all gesture-related data inside `TouchActionEventArgs args`.
 
 When you get a `TouchActionResult.Panning` you could also have the property `ManipulationInfo Manipulation` filled with scale and rotation data. Otherwise expect it to be `null`.
 
@@ -101,7 +101,7 @@ The static property `TouchEffect.Density` is used internally to convert pixels/p
 
 * For a case of your custom control sitting inside a ScrollView there is a TouchMode property to be played with. For example you might want to set it to `TouchHandlingStyle.Lock` so that when your control receives the Down event the parent ScrollView stops receiving gestures until we get an Up, so we can Pan our control at will.
 
-* You can close the keyboard programmatically on Android with a 
+* You can close the keyboard programmatically on Android with a
 
 ```csharp
 TouchEffect.CloseKeyboard();
