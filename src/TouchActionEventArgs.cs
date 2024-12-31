@@ -60,37 +60,35 @@
                 if (current.Distance.Delta.X == 0 && current.Distance.Delta.Y == 0 && (current.Type == TouchActionType.Released
                         || current.Type == TouchActionType.Cancelled || current.Type == TouchActionType.Exited))
                 {
-                    //we gonna recalc velocity based on this event time, usually this is the case of finger released
+                    // maybe finger released
+                    var prevDeltaSecondsX = previous.Distance.Velocity.X != 0 ? previous.Distance.Delta.X / previous.Distance.Velocity.X : 0;
+                    var prevDeltaSecondsY = previous.Distance.Velocity.Y != 0 ? previous.Distance.Delta.Y / previous.Distance.Velocity.Y : 0;
 
-                    var prevDeltaSeconds = 0.0f;
-                    var prevDeltaSecondsX = previous.Distance.Delta.X / previous.Distance.Velocity.X;
-                    var prevDeltaSecondsY = previous.Distance.Delta.Y / previous.Distance.Velocity.Y;
+                    var prevDeltaSeconds = !double.IsNaN(prevDeltaSecondsX) ? prevDeltaSecondsX : prevDeltaSecondsY;
 
-                    if (!double.IsNaN(prevDeltaSecondsX))
-                    {
-                        prevDeltaSeconds = prevDeltaSecondsX;
-                    }
-                    else
-                    if (!double.IsNaN(prevDeltaSecondsY))
-                    {
-                        prevDeltaSeconds = prevDeltaSecondsY;
-                    }
                     deltaDistance = new(previous.Distance.Delta.X, previous.Distance.Delta.Y);
-                    deltaSeconds = (float)((current.Time - previous.Time).TotalMilliseconds / 1000.0f + prevDeltaSeconds);
-                    velocity = new PointF(deltaDistance.X / deltaSeconds, deltaDistance.Y / deltaSeconds);
-
-                    //Debug.WriteLine($"[V-LAST] {current.Type}  distance {deltaDistance.Y:0.0} time {deltaSeconds:0.000} => {velocity.Y}");
+                    deltaSeconds = (float)((current.Timestamp - previous.Timestamp).TotalSeconds + prevDeltaSeconds);
+                    if (deltaSeconds > 0)
+                    {
+                        velocity = new PointF(deltaDistance.X / deltaSeconds, deltaDistance.Y / deltaSeconds);
+                    }
                 }
                 else
                 {
                     deltaDistance = new(current.Distance.Delta.X, current.Distance.Delta.Y);
-                    deltaSeconds = (float)((current.Time - previous.Time).TotalMilliseconds / 1000.0f);
-                    velocity = new PointF(deltaDistance.X / deltaSeconds, deltaDistance.Y / deltaSeconds);
+                    deltaSeconds = (float)((current.Timestamp - previous.Timestamp).TotalSeconds);
+                    if (deltaSeconds > 0)
+                    {
+                        velocity = new PointF(deltaDistance.X / deltaSeconds, deltaDistance.Y / deltaSeconds);
+                    }
                 }
             }
 
+            //Trace.WriteLine(previous != null ? $"[G] {velocity.Y} {previous.Type}" : $"[G] {velocity.Y} NULL");
+
             return velocity;
         }
+
         /// <summary>
         /// Using Distance.Delta and Time of previous args
         /// </summary>
@@ -106,27 +104,17 @@
             object elementBindingContext)
         {
             Id = id;
-            Time = DateTime.Now;
             Type = type;
             Location = location;
             Context = elementBindingContext;
             Distance = new DistanceInfo();
         }
 
-        public DateTime Time { get; private set; }
-
         public TouchActionEventArgs()
         {
-            Time = DateTime.Now;
             Distance = new DistanceInfo();
         }
 
-
-
-        public PointF GetScaledLocation(float scale)
-        {
-            return new PointF(Location.X * scale, Location.Y * scale);
-        }
 
         public long Id { private set; get; }
 

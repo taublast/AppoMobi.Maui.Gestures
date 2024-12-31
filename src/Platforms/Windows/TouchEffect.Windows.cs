@@ -1,7 +1,7 @@
-﻿using Microsoft.Maui.Controls.Platform;
+﻿using System.ComponentModel;
+using Microsoft.Maui.Controls.Platform;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Input;
-using System.ComponentModel;
 
 namespace AppoMobi.Maui.Gestures
 {
