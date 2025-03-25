@@ -6,8 +6,8 @@ This library is used by [DrawnUI for .NET MAUI](https://github.com/taublast/Draw
 
 ## What's New - 1.9.4
 
-* Sending UP when TouchMode was Locked and action was TouchActionType.Exited
-* Default TappedWhenMovedThresholdPoints value set to 55 pts
+* Up is now correctly sent when finger released outside of bounds
+* Tuned the threshold to trigger TAPPED when panning (`TappedWhenMovedThresholdPoints` set to 55 pts)
 
 ## Features
 
