@@ -4,10 +4,10 @@ Library for .NET MAUI to handle gestures. Can be consumed in Xaml and code-behin
 
 This library is used by [DrawnUI for .NET MAUI](https://github.com/taublast/DrawnUi.Maui).
 
-## What's New - 1.9.3.1
+## What's New - 1.9.4
 
-* Velocity calculation optimized
-* Compiled for both .NET 8 and 9.
+* Sending UP when TouchMode was Locked and action was TouchActionType.Exited
+* Default TappedWhenMovedThresholdPoints value set to 55 pts
 
 ## Features
 

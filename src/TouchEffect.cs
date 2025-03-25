@@ -30,7 +30,7 @@ namespace AppoMobi.Maui.Gestures
         /// <summary>
         /// How much finger can move between DOWN and UP for the gestured to be still considered as TAPPED. In points, not pixels.
         /// </summary>
-        public static float TappedWhenMovedThresholdPoints = 20f;
+        public static float TappedWhenMovedThresholdPoints = 55f;
 
         protected MultitouchTracker _manipulationTracker = new();
 
@@ -873,22 +873,14 @@ namespace AppoMobi.Maui.Gestures
                             _manipulationTracker.RemoveTouch(args.Id);
                         }
 
-                        if (TouchMode == TouchHandlingStyle.Lock
-                            && action == TouchActionType.Exited)
+                        //UP
+                        if (listener != null)
                         {
-                            //what to do what to do.. (c) Matthew
+                            SendAction(listener, action, args, TouchActionResult.Up);
                         }
-                        else
-                        {
-                            //UP
-                            if (listener != null)
-                            {
-                                SendAction(listener, action, args, TouchActionResult.Up);
-                            }
 
-                            Up?.Invoke(element, args);
-                            LastActionResult = TouchActionResult.Up;
-                        }
+                        Up?.Invoke(element, args);
+                        LastActionResult = TouchActionResult.Up;
 
                     }
 
