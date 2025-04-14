@@ -2,12 +2,11 @@
 
 Library for .NET MAUI to handle gestures. Can be consumed in Xaml and code-behind. A nuget with the same name is available.
 
-This library is used by [DrawnUI for .NET MAUI](https://github.com/taublast/DrawnUi.Maui).
+This library is used by [DrawnUI for .NET MAUI](https://github.com/taublast/DrawnUi).
 
-## What's New - 1.9.4
+## What's New - 1.9.5
 
-* Up is now correctly sent when finger released outside of bounds
-* Tuned the threshold to trigger TAPPED when panning (`TappedWhenMovedThresholdPoints` set to 55 pts)
+* Fixed TAPPED threshold logic, (`TappedWhenMovedThresholdPoints` changed to 16 pts). Tested to be fine on desktop and hi-res mobile screens.
 
 ## Features
 

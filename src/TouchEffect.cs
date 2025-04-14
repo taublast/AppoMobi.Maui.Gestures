@@ -104,7 +104,7 @@ namespace AppoMobi.Maui.Gestures
 #endif
         }
 
-        private float _thresholdTap = 50;
+        private float _thresholdTap = 16;
 
         static float _density = 0f;
         public static float Density
@@ -813,8 +813,8 @@ namespace AppoMobi.Maui.Gestures
                         {
                             _manipulationTracker.Reset();
 
-                            var totalX = Density * args.Distance.Total.X;
-                            var totalY = Density * args.Distance.Total.Y;
+                            var totalX = args.Distance.Total.X / Density;
+                            var totalY = args.Distance.Total.Y / Density;
 
                             DisableLongPressingTimer();
 
@@ -857,6 +857,10 @@ namespace AppoMobi.Maui.Gestures
                                 //        canvas.PlayRippleAnimation(Colors.White, args.Location.X, args.Location.Y);
                                 //    }
                                 //}
+                            }
+                            else
+                            {
+                                Debug.WriteLine("[Gestures] Tap skipped");
                             }
 
                             //IsLongPressing = false;
