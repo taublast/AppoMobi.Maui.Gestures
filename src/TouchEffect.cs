@@ -30,7 +30,7 @@ namespace AppoMobi.Maui.Gestures
         /// <summary>
         /// How much finger can move between DOWN and UP for the gestured to be still considered as TAPPED. In points, not pixels.
         /// </summary>
-        public static float TappedWhenMovedThresholdPoints = 55f;
+        public static float TappedVelocityThresholdPoints = 200f;
 
         protected MultitouchTracker _manipulationTracker = new();
 
@@ -104,7 +104,7 @@ namespace AppoMobi.Maui.Gestures
 #endif
         }
 
-        private float _thresholdTap = 16;
+        private float _thresholdVelocityPixels;
 
         static float _density = 0f;
         public static float Density
@@ -273,7 +273,12 @@ namespace AppoMobi.Maui.Gestures
 
             Disposed = true;
 
-
+            if (_longPressTimer != null)
+            {
+                _longPressTimer.Tick -= OnLongPressTimerTick;
+                _longPressTimer.Stop();
+                _longPressTimer = null;
+            }
 
             //not sending any references by purpose
             Disposing?.Invoke(null, null);
@@ -471,8 +476,6 @@ namespace AppoMobi.Maui.Gestures
 
         protected DateTime TimerStarted { get; set; }
 
-
-
         public bool Disposed { get; private set; }
 
         protected override void OnDetached()
@@ -494,19 +497,17 @@ namespace AppoMobi.Maui.Gestures
 
         private bool _maybeTapped;
 
-        private bool _IsLongPressing;
         public bool IsLongPressing
         {
-            get
-            {
-                return _IsLongPressing;
-            }
+            get => _longPressState == LongPressState.Active;
             set
             {
                 _onTimerBusy = false;
-                if (_IsLongPressing != value)
+                bool currentValue = _longPressState == LongPressState.Active;
+                if (currentValue != value)
                 {
-                    _IsLongPressing = value;
+                    _longPressState = value ? LongPressState.Active : LongPressState.Idle;
+
                     if (value)
                     {
                         _wasLongPressing = true;
@@ -517,98 +518,120 @@ namespace AppoMobi.Maui.Gestures
 
         bool _wasLongPressing { get; set; }
 
+        /// <summary>
+        /// Handler for the timer tick event
+        /// </summary>
+        private void OnLongPressTimerTick(object sender, EventArgs e)
+        {
+            // Stop timer after first tick - we only need one notification
+            _longPressTimer.Stop();
+
+            // Process the long press if not locked
+            if (!lockLongPress && lastDown != null)
+            {
+                _longPressState = LongPressState.Active;
+                IsLongPressing = true;
+
+                var listener = Element as IGestureListener;
+                if (listener is { InputTransparent: true })
+                {
+                    listener = null;
+                }
+
+                if (!lastDown.PreventDefault)
+                {
+                    if (listener != null)
+                    {
+                        var receiver = listener;
+                        SendAction(receiver, TouchActionType.Pressing, lastDown, TouchActionResult.LongPressing);
+                    }
+
+                    if (CommandLongPressing != null)
+                    {
+                        lastDown.Context = CommandLongPressingParameter;
+                        if (CommandLongPressingParameter != null)
+                        {
+                            CommandLongPressing.Execute(CommandLongPressingParameter);
+                        }
+                        else
+                        {
+                            CommandLongPressing.Execute(lastDown);
+                        }
+                    }
+
+                    LongPressing?.Invoke(Element, lastDown);
+                }
+            }
+        }
+
         private volatile bool _onTimerBusy;
         private volatile bool lockLongPress;
 
-        private void OnLongPress()
+        // Single timer instance to reuse
+        private IDispatcherTimer _longPressTimer;
+
+        private enum LongPressState
         {
-            if (_onTimerBusy || lastDown == null || lockLongPress)
-                return;
+            Idle,
+            Pending,
+            Active
+        }
 
-            _onTimerBusy = true;
-            try
+        private LongPressState _longPressState = LongPressState.Idle;
+
+        /// <summary>
+        /// Initializes the long press timer if not already created
+        /// </summary>
+        private void EnsureLongPressTimer()
+        {
+            if (_longPressTimer == null)
             {
-                var delta = (DateTime.Now - TimerStarted).TotalMilliseconds;
-                if (!IsLongPressing && delta >= LongPressTimeMs)
-                {
-                    IsLongPressing = true;
-
-                    var listener = Element as IGestureListener;
-                    if (listener is { InputTransparent: true })
-                    {
-                        listener = null;
-                    }
-
-                    if (!lastDown.PreventDefault)
-                    {
-                        if (listener != null)
-                        {
-                            var receiver = listener;
-                            SendAction(receiver, TouchActionType.Pressing, lastDown, TouchActionResult.LongPressing);
-                        }
-                        if (CommandLongPressing != null)
-                        {
-                            lastDown.Context = CommandLongPressingParameter;
-                            if (CommandLongPressingParameter != null)
-                            {
-                                CommandLongPressing.Execute(CommandLongPressingParameter);
-                            }
-                            else
-                            {
-                                CommandLongPressing.Execute(lastDown);
-                            }
-                        }
-                        LongPressing?.Invoke(Element, lastDown);
-                    }
-
-                }
-            }
-            catch (Exception exception)
-            {
-                Console.WriteLine(exception);
-            }
-            finally
-            {
-                _onTimerBusy = false;
+                _longPressTimer = Application.Current.Dispatcher.CreateTimer();
+                _longPressTimer.Tick += OnLongPressTimerTick;
             }
         }
 
-        async void EnableLongPressingTimer()
+        /// <summary>
+        /// Starts the long press detection timer
+        /// </summary>
+        private void EnableLongPressingTimer()
         {
             Debug.WriteLine("EnableLongPressingTimer");
 
-            ctsLongPressingTime?.Cancel();
-            ctsLongPressingTime = new();
+            EnsureLongPressTimer();
 
-            try
-            {
-                // Wait for the specified duration. If the token is cancelled, this will throw an OperationCanceledException
-                await Task.Delay(LongPressTimeMs, ctsLongPressingTime.Token);
+            // Stop any existing timer
+            _longPressTimer.Stop();
 
-                // If we've reached this point without being cancelled, the long press gesture is complete
-                OnLongPress();
-            }
-            catch (OperationCanceledException)
-            {
-                // The task was cancelled, so the long press gesture did not complete
-            }
+            // Set timer interval to the long press time
+            _longPressTimer.Interval = TimeSpan.FromMilliseconds(LongPressTimeMs);
+
+            // Update state
+            _longPressState = LongPressState.Pending;
+
+            // Start the timer
+            _longPressTimer.Start();
         }
 
-        void DisableLongPressingTimer()
+        /// <summary>
+        /// Disables the long press timer
+        /// </summary>
+        private void DisableLongPressingTimer()
         {
             Debug.WriteLine("DisableLongPressingTimer");
 
+            if (_longPressTimer != null && _longPressTimer.IsRunning)
+            {
+                _longPressTimer.Stop();
+            }
 
-            ctsLongPressingTime?.Cancel();
-        }
-
-        public async void LongPressTask(CancellationToken token)
-        {
-
+            if (_longPressState == LongPressState.Pending)
+            {
+                _longPressState = LongPressState.Idle;
+            }
         }
 
         CancellationTokenSource ctsLongPressingTime;
-
 
         protected TouchActionEventArgs lastDown { get; set; }
 
@@ -695,7 +718,7 @@ namespace AppoMobi.Maui.Gestures
                         || action == TouchActionType.Pressed)
                     {
                         _lastArgs = null;
-                        _thresholdTap = TappedWhenMovedThresholdPoints * Density;
+                        _thresholdVelocityPixels = TappedVelocityThresholdPoints * Density;
 
                         TimerStarted = DateTime.Now;
                         lockLongPress = false;
@@ -813,20 +836,18 @@ namespace AppoMobi.Maui.Gestures
                         {
                             _manipulationTracker.Reset();
 
-                            var totalX = args.Distance.Total.X / Density;
-                            var totalY = args.Distance.Total.Y / Density;
-
                             DisableLongPressingTimer();
 
                             //TAPPED
                             if (//!IsPanning &&
                                 !IsLongPressing
+                                && args.NumberOfTouches == 1
                                 && _maybeTapped
                                && lastDown != null
                               && action == TouchActionType.Released
                               && !lastDown.PreventDefault
-                              && Math.Abs(totalX) <= _thresholdTap && Math.Abs(totalY) <= _thresholdTap
-                               )
+                              &&  Math.Abs(args.Distance.TotalVelocity.X) < _thresholdVelocityPixels
+                                && Math.Abs(args.Distance.TotalVelocity.Y)  < _thresholdVelocityPixels)
                             {
                                 if (listener != null)
                                 {
@@ -842,21 +863,6 @@ namespace AppoMobi.Maui.Gestures
                                 }
                                 Tapped?.Invoke(passView, args);
                                 LastActionResult = TouchActionResult.Tapped;
-
-                                ////Attachable animation effects
-                                //if (this.Element is IAnimatable animator)
-                                //{
-                                //    var animate = GetAnimationView(Element);
-                                //    var animation = GetAnimationTapped(Element);
-                                //    if (animate is SkiaControl control && animation == SkiaTouchAnimation.Ripple)
-                                //    {
-                                //        control.PlayRippleAnimation(Colors.White, args.Location.X, args.Location.Y);
-                                //    }
-                                //    else if (Element is SkiaBaseView canvas && animation == SkiaTouchAnimation.Ripple)
-                                //    {
-                                //        canvas.PlayRippleAnimation(Colors.White, args.Location.X, args.Location.Y);
-                                //    }
-                                //}
                             }
                             else
                             {

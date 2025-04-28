@@ -4,9 +4,19 @@ Library for .NET MAUI to handle gestures. Can be consumed in Xaml and code-behin
 
 This library is used by [DrawnUI for .NET MAUI](https://github.com/taublast/DrawnUi).
 
-## What's New - 1.9.5
+.NET 8 and above compatible.
 
-* Fixed TAPPED threshold logic, (`TappedWhenMovedThresholdPoints` changed to 16 pts). Tested to be fine on desktop and hi-res mobile screens.
+## What's New - 1.9.7
+
+* Changed TAPPED threshold logic to use velocity instead of distance, which removed occasional fake taps while swiping:
+
+```csharp
+        /// <summary>
+        /// How much finger can move between DOWN and UP for the gestured to be still considered as TAPPED. In points, not pixels.
+        /// </summary>
+        public static float TappedVelocityThresholdPoints = 200f;
+```
+ 
 
 ## Features
 
@@ -94,7 +104,7 @@ You will receive all gesture-related data inside `TouchActionEventArgs args`.
 
 When you get a `TouchActionResult.Panning` you could also have the property `ManipulationInfo Manipulation` filled with scale and rotation data. Otherwise expect it to be `null`.
 
-The static property `TouchEffect.Density` is used internally to convert pixels/points, you can you it too as all the data you would get will be in pixels, convert it to points/whatever as you please.
+The public static property `TouchEffect.Density` is used to convert pixels/points, you can you it too as all the data you would get will be in pixels, convert it to points/whatever as you please.
 
 #### Hints
 
@@ -113,7 +123,7 @@ Actually we have some static properties for settings.
 * How much finger can move between DOWN and UP for the gestured to be still considered as TAPPED. In points, not pixels.
 
 ```csharp
-TouchEffect.TappedWhenMovedThresholdPoints = 10f;
+public static float TappedVelocityThresholdPoints = 200f;
 ```
 
 * How much milliseconds to wait until LongPressing is triggered.
@@ -122,6 +132,3 @@ TouchEffect.TappedWhenMovedThresholdPoints = 10f;
 TouchEffect.LongPressTimeMsDefault = 1500;
 ```
 
-## Previously
-* Longpressing sent while panning too, you have to check for panning yourself if you wish to ignore long pressing in that case.
-* Tapped cannot trigger after Longpressing until another finger is Down.

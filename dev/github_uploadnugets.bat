@@ -13,7 +13,7 @@ REM Define the source directory for the packages
 set "source_dir=E:\Nugets"
 
 REM Define the list of file masks for the packages
-set "mask[1]=AppoMobi.Maui.Gestures.1.9.3.1*.*nupkg"
+set "mask[1]=AppoMobi.Maui.Gestures.1.9.7*nupkg"
 set "mask_count=1"
 
 REM Loop through each file mask
