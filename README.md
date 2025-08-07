@@ -70,6 +70,20 @@ TouchEffect.SetCommandTappedParameter(tabItem, selectedIndex);
 
 ### Enhanced Usage
 
+## Sharing gestures
+
+In some scenarios, inside a scroll and similar other views might interfere with your gestures processing. 
+
+A quick remedy:
+
+```xml
+touch:TouchEffect.ShareTouch="Lock"
+```
+
+this would lick the input for your view once it was initially passed to it.
+
+## Manual processing
+
  You can opt for processing gestures on a lower level yourself, especially if you are creating a custom control. First we just attach the effect with a special property:
 
 ```xml
