@@ -21,7 +21,7 @@ This library is used by [DrawnUI for .NET MAUI](https://github.com/taublast/Draw
   - [Lock Mode](#lock-mode)
   - [Manual Mode](#manual-mode-new)
   - [Disabled Mode](#disabled-mode)
-- [Mouse and Pen Support](#mouse-and-pen-support)
+- [Pointer and Pen Support](#pointer-and-pen-support)
 - [Advanced Usage](#advanced-usage)
   - [Manual Gesture Processing](#manual-gesture-processing)
   - [IGestureListener Interface](#igesturelistener-interface)
@@ -37,6 +37,12 @@ This library is used by [DrawnUI for .NET MAUI](https://github.com/taublast/Draw
 
 ### Version 1.10.1
 * Added `Manual` touch mode for dynamic gesture control with parent controls, allowing true cooperative gesture handling inside ScrollViews and other containers.
+* Cross-Platform Mouse Support: Windows (full) and macCatalyst (basic) mouse button detection
+* Smart Button Handling: Left button uses standard touch events, other buttons use Pointer events for backward compatibility
+* Gaming Mouse Support: Extended buttons (XButton1-9) with unlimited button detection via `ButtonNumber` property
+* Pen/Stylus Integration: Pressure sensitivity and device type detection (Windows, macCatalyst with Apple Pencil)
+* Multi-Button Operations: Track multiple pressed buttons simultaneously during drag operations
+* Hover Tracking: Mouse movement without button press (Windows)
 
 ---
 
