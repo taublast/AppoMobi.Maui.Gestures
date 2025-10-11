@@ -37,12 +37,15 @@ This library is used by [DrawnUI for .NET MAUI](https://github.com/taublast/Draw
 
 ### Version 1.10.1
 * Added `Manual` touch mode for dynamic gesture control with parent controls, allowing true cooperative gesture handling inside ScrollViews and other containers.
-* Cross-Platform Mouse Support: Windows (full) and macCatalyst (basic) mouse button detection
+* Pointer Data Support: Added rich pointer/mouse event data with `TouchActionEventArgs.Pointer` property
+* Windows (Full Support): Complete mouse button detection (Left, Right, Middle, XButton1-9), pen pressure, hover tracking
+* macCatalyst (Basic Support): Left/Right click detection, Apple Pencil detection, hover tracking, trackpad scrolling via UIScrollView
+  * Android (Good Support): Mouse button detection (Left, Right, Middle, XButton1-2), stylus pressure, hover tracking, scroll wheel
 * Smart Button Handling: Left button uses standard touch events, other buttons use Pointer events for backward compatibility
-* Gaming Mouse Support: Extended buttons (XButton1-9) with unlimited button detection via `ButtonNumber` property
-* Pen/Stylus Integration: Pressure sensitivity and device type detection (Windows, macCatalyst with Apple Pencil)
-* Multi-Button Operations: Track multiple pressed buttons simultaneously during drag operations
-* Hover Tracking: Mouse movement without button press (Windows)
+* Gaming Mouse Support: Extended buttons (XButton1-9) with unlimited button detection via `ButtonNumber` property (Windows only)
+* Pen/Stylus Integration: Pressure sensitivity during touch events (Windows, macCatalyst with Apple Pencil)
+* Hover Tracking: Mouse movement without button press (Windows full, macCatalyst basic)
+  * Trackpad Scrolling: Two-finger trackpad pan detection with smooth deltas (macCatalyst via UIScrollView)
 
 ---
 
@@ -544,33 +547,44 @@ switch (args.Pointer?.Button)
 ### Platform Support
 
 - **Windows**: Full support for all buttons, pen pressure, hover tracking
-- **macCatalyst**: Basic mouse support (Left/Right click, Apple Pencil with pressure)
+- **macCatalyst**: Basic mouse support (Left/Right click, hover tracking, Apple Pencil detection)
 - **iOS/Android**: Touch events only (no mouse support)
 
 #### macCatalyst Implementation Notes
 
 The macCatalyst implementation provides basic mouse support with some limitations compared to Windows:
 
-**Supported Features:**
-- Left and Right mouse button detection
-- Apple Pencil with pressure sensitivity
-- Mouse vs touch differentiation
-- Same smart button handling (Left = standard events, Right = Pointer events)
+**✅ Supported Features:**
+- ✅ Left and Right mouse button detection (basic)
+- ✅ Apple Pencil detection (UITouchType.Stylus)
+- ✅ Mouse vs touch differentiation
+- ✅ Hover tracking (mouse movement without button press)
+- ✅ Same smart button handling (Left = standard events, Right = Pointer events)
 
-**Limitations:**
-- Extended buttons (XButton3-9) may not be available
-- Right-click detection is basic compared to Windows
-- Mouse button detection relies on UIKit touch properties
+**⚠️ Limitations:**
+- ❌ Extended buttons (XButton3-9) not available (UIKit limitation)
+- ❌ Pressure tracking during hover not available (UIKit limitation)
+- ⚠️ Right-click detection is heuristic-based, not as reliable as Windows
+- ⚠️ Middle button detection not implemented (UIKit doesn't expose it)
 
-**Detection Method:**
+**🔧 Technical Implementation:**
 ```csharp
-// Mouse events detected via touch characteristics
+// Mouse detection via touch characteristics
 private bool IsMouseEvent(UITouch touch, UIEvent evt)
 {
     return touch.Type == UITouchType.Indirect ||
            (touch.MaximumPossibleForce == 0 && touch.Force == 0);
 }
+
+// Hover tracking via UIHoverGestureRecognizer
+var hoverGestureRecognizer = new UIHoverGestureRecognizer(HandleHover);
+_view.AddGestureRecognizer(hoverGestureRecognizer);
 ```
+
+**📝 Pressure Tracking Note:**
+- Pressure is available during Apple Pencil touch events
+- Pressure during hover is NOT available (UIKit limitation)
+- Mouse always reports pressure = 1.0f
 
 ### Backward Compatibility
 

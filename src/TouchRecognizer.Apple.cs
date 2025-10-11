@@ -2,6 +2,9 @@
 using CoreGraphics;
 using Foundation;
 using UIKit;
+#if MACCATALYST
+using AppKit;
+#endif
 
 namespace AppoMobi.Maui.Gestures
 {
@@ -108,6 +111,13 @@ namespace AppoMobi.Maui.Gestures
             if (_view != null)
             {
                 _view.UserInteractionEnabled = true;
+
+                // Add hover tracking for mouse movement without button press
+                var hoverGestureRecognizer = new UIHoverGestureRecognizer(HandleHover);
+                _view.AddGestureRecognizer(hoverGestureRecognizer);
+
+                // Setup trackpad detection for two-finger scrolling
+                SetupTrackpadDetection();
             }
 #endif
 
@@ -216,22 +226,24 @@ namespace AppoMobi.Maui.Gestures
             // In macCatalyst, we need to inspect the UIEvent for mouse button information
             // This is a simplified approach - macCatalyst doesn't expose all mouse buttons like Windows
 
-            // For now, we'll detect based on the event type and touch properties
-            // This is limited but works for basic left/right click detection
-
-            if (evt.Type == UIEventType.Presses)
+            // Try to detect button type based on event properties
+            if (evt.AllTouches != null && evt.AllTouches.Count > 0)
             {
-                // Check if this is a right-click (secondary click)
-                var allTouches = evt.AllTouches;
-                if (allTouches != null && allTouches.Count > 0)
+                var touch = evt.AllTouches.AnyObject as UITouch;
+                if (touch != null)
                 {
-                    var touch = allTouches.AnyObject as UITouch;
-                    if (touch != null)
+                    // Check for right-click characteristics
+                    // In macCatalyst, right-click often has different tap count or force characteristics
+                    if (touch.TapCount == 0 || (touch.MaximumPossibleForce > 0 && touch.Force > touch.MaximumPossibleForce * 0.8))
                     {
-                        // In macCatalyst, right-click can be detected via touch properties
-                        // This is a basic implementation
-                        return (MouseButton.Left, 1); // Default to left for now
+                        // Likely right-click or force touch
+                        return (MouseButton.Right, 2);
                     }
+
+                    // Check for middle button (this is very limited in macCatalyst)
+                    // We can't reliably detect middle button, so we default to left
+
+                    return (MouseButton.Left, 1);
                 }
             }
 
@@ -291,6 +303,113 @@ namespace AppoMobi.Maui.Gestures
             return touch.Type == UITouchType.Indirect ||
                    (touch.MaximumPossibleForce == 0 && touch.Force == 0); // Mouse doesn't have force
         }
+
+        private void HandleHover(UIHoverGestureRecognizer recognizer)
+        {
+            if (_parent == null || IsViewOrAncestorHidden(this.View))
+                return;
+
+            var location = recognizer.LocationInView(_view);
+            var point = new PointF((float)(location.X * TouchEffect.Density), (float)(location.Y * TouchEffect.Density));
+
+            // Determine device type and pressure for hover
+            var deviceType = PointerDeviceType.Mouse;
+            var pressure = 1.0f; // Default mouse pressure
+
+            // Try to detect Apple Pencil during hover
+            // Note: UIHoverGestureRecognizer doesn't provide direct access to pressure during hover
+            // This is a limitation of UIKit - pressure is only available during actual touch events
+
+            // Fire hover event with detected device type
+            _parent.FireEventPointerWithMouse(0, point, deviceType, pressure);
+        }
+
+        #region UIScrollView-based Trackpad Detection
+
+        // macCatalyst doesn't have NSEvent access, so we need to use UIScrollView
+        // to detect trackpad scrolling. This is a different approach than pure NSEvent.
+
+        private UIScrollView _trackpadDetectionScrollView;
+
+        private void SetupTrackpadDetection()
+        {
+            // Create a transparent scroll view to capture trackpad gestures
+            _trackpadDetectionScrollView = new UIScrollView
+            {
+                Frame = _view.Bounds,
+                BackgroundColor = UIColor.Clear,
+                UserInteractionEnabled = true,
+                ScrollEnabled = true,
+                ShowsHorizontalScrollIndicator = false,
+                ShowsVerticalScrollIndicator = false,
+                ContentSize = new CGSize(_view.Bounds.Width * 3, _view.Bounds.Height * 3) // Large content area
+            };
+
+            // Set content offset to center
+            _trackpadDetectionScrollView.ContentOffset = new CGPoint(_view.Bounds.Width, _view.Bounds.Height);
+
+            // Add scroll detection
+            _trackpadDetectionScrollView.Scrolled += OnTrackpadScroll;
+
+            // Insert behind other views so it doesn't interfere
+            _view.InsertSubview(_trackpadDetectionScrollView, 0);
+        }
+
+        private void OnTrackpadScroll(object sender, EventArgs e)
+        {
+            if (_parent == null || IsViewOrAncestorHidden(this.View))
+                return;
+
+            var scrollView = sender as UIScrollView;
+            if (scrollView == null) return;
+
+            // Calculate scroll deltas
+            var centerX = _view.Bounds.Width;
+            var centerY = _view.Bounds.Height;
+            var currentOffset = scrollView.ContentOffset;
+
+            var deltaX = (float)(currentOffset.X - centerX);
+            var deltaY = (float)(currentOffset.Y - centerY);
+
+            // Reset to center to allow continuous scrolling
+            scrollView.ContentOffset = new CGPoint(centerX, centerY);
+
+            // Only process if there's actual movement
+            if (Math.Abs(deltaX) > 0.1f || Math.Abs(deltaY) > 0.1f)
+            {
+                // Get current touch location (approximate)
+                var point = new PointF((float)(_view.Bounds.Width / 2), (float)(_view.Bounds.Height / 2));
+
+                // Fire trackpad pan event
+                HandleTrackpadScroll(point, deltaX, deltaY);
+            }
+        }
+
+        private void HandleTrackpadScroll(PointF point, float deltaX, float deltaY)
+        {
+            // Create trackpad pan event
+            var distance = new PointF(deltaX, deltaY);
+
+            // For UIScrollView-based detection, we don't have momentum phases
+            // So we'll use a simpler approach - just fire move events
+            var actionType = TouchActionType.Moved;
+
+            // Fire trackpad pan event
+            _parent.FireEventWithTrackpadPan(0, actionType, point, distance);
+        }
+
+        private void CleanupTrackpadDetection()
+        {
+            if (_trackpadDetectionScrollView != null)
+            {
+                _trackpadDetectionScrollView.Scrolled -= OnTrackpadScroll;
+                _trackpadDetectionScrollView.RemoveFromSuperview();
+                _trackpadDetectionScrollView.Dispose();
+                _trackpadDetectionScrollView = null;
+            }
+        }
+
+        #endregion
 
         #endregion
 #endif
@@ -539,6 +658,11 @@ namespace AppoMobi.Maui.Gestures
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
+
+#if MACCATALYST
+            // Clean up trackpad detection
+            CleanupTrackpadDetection();
+#endif
 
             _disposed = true;
         }

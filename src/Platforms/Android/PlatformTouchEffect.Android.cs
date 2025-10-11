@@ -17,9 +17,13 @@ namespace AppoMobi.Maui.Gestures
 
             if (FormsEffect != null && _androidView != null)
             {
-                // Set event handler on View
-                _androidView.SetOnTouchListener(new TouchListener(this, _androidView.Context));
-                //view.Touch += OnTouch;
+                // Set event handlers on View
+                var touchListener = new TouchListener(this, _androidView.Context);
+                _androidView.SetOnTouchListener(touchListener);
+
+                // Register mouse event listeners
+                _androidView.SetOnHoverListener(touchListener);
+                _androidView.SetOnGenericMotionListener(touchListener);
 
                 FormsEffect.Disposing += OnFormsDisposing;
 
@@ -59,6 +63,8 @@ namespace AppoMobi.Maui.Gestures
             if (_androidView != null)
             {
                 _androidView.SetOnTouchListener(null);
+                _androidView.SetOnHoverListener(null);
+                _androidView.SetOnGenericMotionListener(null);
                 _androidView = null;
             }
 
@@ -77,6 +83,101 @@ namespace AppoMobi.Maui.Gestures
 
                 FormsEffect?.OnTouchAction(args);
 
+            }
+            catch (System.Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
+        }
+
+        void FireEventWithMouse(int id, TouchActionType actionType, PointF pointerLocation,
+            PointerDeviceType deviceType, float pressure, MouseButton button, int buttonNumber,
+            MouseButtonState buttonState, MouseButtons pressedButtons)
+        {
+            try
+            {
+                var args = new TouchActionEventArgs(id, actionType, pointerLocation, null);
+                args.Wheel = Wheel;
+                args.NumberOfTouches = CountFingers;
+                args.IsInsideView = isInsideView;
+
+                // Set mouse-specific data
+                args.Pointer = new TouchEffect.PointerData
+                {
+                    Button = button,
+                    ButtonNumber = buttonNumber,
+                    State = buttonState,
+                    PressedButtons = pressedButtons,
+                    DeviceType = deviceType,
+                    Pressure = pressure
+                };
+
+                FormsEffect?.OnTouchAction(args);
+            }
+            catch (System.Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
+        }
+
+        void FireEventPointerWithMouse(int id, PointF pointerLocation, PointerDeviceType deviceType,
+            float pressure, MouseButton button, int buttonNumber, MouseButtonState buttonState,
+            MouseButtons pressedButtons)
+        {
+            try
+            {
+                var args = new TouchActionEventArgs(id, TouchActionType.Pointer, pointerLocation, null);
+                args.Wheel = Wheel;
+                args.NumberOfTouches = CountFingers;
+                args.IsInsideView = isInsideView;
+
+                // Set mouse-specific data
+                args.Pointer = new TouchEffect.PointerData
+                {
+                    Button = button,
+                    ButtonNumber = buttonNumber,
+                    State = buttonState,
+                    PressedButtons = pressedButtons,
+                    DeviceType = deviceType,
+                    Pressure = pressure
+                };
+
+                FormsEffect?.OnTouchAction(args);
+            }
+            catch (System.Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
+        }
+
+        void FireEventWheel(int id, PointF pointerLocation, PointF wheelDelta)
+        {
+            try
+            {
+                var args = new TouchActionEventArgs(id, TouchActionType.Wheel, pointerLocation, null);
+                args.Wheel = Wheel;
+                args.NumberOfTouches = CountFingers;
+                args.IsInsideView = isInsideView;
+                args.Distance = new TouchActionEventArgs.DistanceInfo
+                {
+                    Delta = wheelDelta,
+                    Total = wheelDelta,
+                    Start = pointerLocation,
+                    End = pointerLocation.Add(wheelDelta)
+                };
+
+                // Set wheel-specific pointer data
+                args.Pointer = new TouchEffect.PointerData
+                {
+                    Button = MouseButton.Left, // Not relevant for wheel
+                    ButtonNumber = 0, // Not relevant for wheel
+                    State = MouseButtonState.Released, // Not relevant for wheel
+                    PressedButtons = MouseButtons.None, // No buttons for wheel
+                    DeviceType = PointerDeviceType.Mouse,
+                    Pressure = 1.0f
+                };
+
+                FormsEffect?.OnTouchAction(args);
             }
             catch (System.Exception ex)
             {

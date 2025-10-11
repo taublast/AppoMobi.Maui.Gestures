@@ -2,6 +2,9 @@
 using Microsoft.Maui.Controls.Platform;
 using System.ComponentModel;
 using UIKit;
+#if MACCATALYST
+using AppKit;
+#endif
 
 namespace AppoMobi.Maui.Gestures
 {
@@ -113,6 +116,11 @@ namespace AppoMobi.Maui.Gestures
 
         public void FireEventPointerWithMouse(long id, PointF point, PointerDeviceType deviceType)
         {
+            FireEventPointerWithMouse(id, point, deviceType, 1.0f);
+        }
+
+        public void FireEventPointerWithMouse(long id, PointF point, PointerDeviceType deviceType, float pressure)
+        {
             try
             {
                 var args = new TouchActionEventArgs(id, TouchActionType.Pointer, point, null);
@@ -128,6 +136,76 @@ namespace AppoMobi.Maui.Gestures
                     State = MouseButtonState.Released, // Not relevant for pointer events
                     PressedButtons = MouseButtons.None, // No buttons pressed during hover
                     DeviceType = deviceType,
+                    Pressure = pressure
+                };
+
+                FormsEffect?.OnTouchAction(args);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+        }
+
+        public void FireEventWithTrackpadPan(long id, TouchActionType actionType, PointF point, PointF distance)
+        {
+            try
+            {
+                var args = new TouchActionEventArgs(id, actionType, point, null);
+                args.Wheel = Wheel;
+                args.NumberOfTouches = 0; // No actual touches for trackpad
+                args.IsInsideView = isInsideView;
+                args.Distance = new TouchActionEventArgs.DistanceInfo
+                {
+                    Delta = distance,
+                    Total = distance,
+                    Start = point,
+                    End = point.Add(distance)
+                };
+
+                // Set trackpad-specific pointer data
+                args.Pointer = new TouchEffect.PointerData
+                {
+                    Button = MouseButton.Left, // Not relevant for trackpad
+                    ButtonNumber = 0, // Not relevant for trackpad
+                    State = MouseButtonState.Released, // Not relevant for trackpad
+                    PressedButtons = MouseButtons.None, // No buttons for trackpad scroll
+                    DeviceType = PointerDeviceType.Mouse, // Trackpad is mouse-like
+                    Pressure = 1.0f
+                };
+
+                FormsEffect?.OnTouchAction(args);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+        }
+
+        public void FireEventWheel(long id, PointF point, PointF wheelDelta)
+        {
+            try
+            {
+                var args = new TouchActionEventArgs(id, TouchActionType.Wheel, point, null);
+                args.Wheel = Wheel;
+                args.NumberOfTouches = 0;
+                args.IsInsideView = isInsideView;
+                args.Distance = new TouchActionEventArgs.DistanceInfo
+                {
+                    Delta = wheelDelta,
+                    Total = wheelDelta,
+                    Start = point,
+                    End = point.Add(wheelDelta)
+                };
+
+                // Set wheel-specific pointer data
+                args.Pointer = new TouchEffect.PointerData
+                {
+                    Button = MouseButton.Left, // Not relevant for wheel
+                    ButtonNumber = 0, // Not relevant for wheel
+                    State = MouseButtonState.Released, // Not relevant for wheel
+                    PressedButtons = MouseButtons.None, // No buttons for wheel
+                    DeviceType = PointerDeviceType.Mouse,
                     Pressure = 1.0f
                 };
 

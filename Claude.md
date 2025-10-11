@@ -57,9 +57,9 @@ Based on the codebase analysis, the library supports:
 ### Desktop-First Design
 - **Smart Button Handling**: Left button uses standard touch events for backward compatibility
 - **Secondary Button Events**: Right, Middle, XButton1-9 use Pointer events to avoid breaking existing controls
-- **Gaming Mouse Support**: Extended buttons (XButton3-9) with ButtonNumber property for unlimited buttons (Windows)
-- **Pen Integration**: Pressure sensitivity and device type detection (Windows, macCatalyst with Apple Pencil)
-- **Hover Tracking**: Non-intrusive mouse movement without press (Windows)
+- **Gaming Mouse Support**: Extended buttons (XButton3-9) with ButtonNumber property for unlimited buttons (Windows only)
+- **Pen Integration**: Pressure sensitivity and device type detection (Windows full, macCatalyst with Apple Pencil during touch)
+- **Hover Tracking**: Non-intrusive mouse movement without press (Windows full, macCatalyst basic via UIHoverGestureRecognizer)
 - **Cross-Platform Consistency**: Same API across Windows and macCatalyst with platform-appropriate limitations
 
 ### Extensibility

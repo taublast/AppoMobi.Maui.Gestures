@@ -4,12 +4,13 @@ using System.Drawing;
 namespace AppoMobi.Maui.Gestures.Examples
 {
     /// <summary>
-    /// Example demonstrating macCatalyst pointer support in AppoMobi.Maui.Gestures
-    ///
-    /// This example shows how to handle mouse, trackpad, and pen events on macCatalyst platform,
-    /// including left-click, right-click, trackpad scrolling, and Apple Pencil support.
+    /// Example demonstrating Android mouse support in AppoMobi.Maui.Gestures
+    /// 
+    /// This example shows how to handle mouse events on Android platform,
+    /// including left-click, right-click, scroll wheel, and stylus support.
+    /// Works with USB/Bluetooth mice, Chromebooks, Android TV, and DeX mode.
     /// </summary>
-    public class MacCatalystMouseExample
+    public class AndroidMouseExample
     {
         private TouchEffect touchEffect;
 
@@ -21,7 +22,7 @@ namespace AppoMobi.Maui.Gestures.Examples
 
         private void OnTouchAction(object sender, TouchActionEventArgs args)
         {
-            // Check if this is a mouse/pen/trackpad event (Pointer property will be non-null)
+            // Check if this is a mouse/stylus event (Pointer property will be non-null)
             if (args.Pointer != null)
             {
                 HandlePointerEvent(args);
@@ -35,19 +36,12 @@ namespace AppoMobi.Maui.Gestures.Examples
         private void HandlePointerEvent(TouchActionEventArgs args)
         {
             var pointer = args.Pointer;
-
+            
             Console.WriteLine($"Pointer Event: {args.Type} at {args.Location}");
             Console.WriteLine($"  Device: {pointer.DeviceType}");
             Console.WriteLine($"  Button: {pointer.Button} (#{pointer.ButtonNumber})");
             Console.WriteLine($"  State: {pointer.State}");
             Console.WriteLine($"  Pressed Buttons: {pointer.PressedButtons}");
-
-            // Check for trackpad scrolling (two-finger pan)
-            if (args.Type == TouchActionType.Moved && args.NumberOfTouches == 0)
-            {
-                HandleTrackpadScroll(args);
-                return;
-            }
             
             // Handle different event types
             switch (args.Type)
@@ -80,28 +74,18 @@ namespace AppoMobi.Maui.Gestures.Examples
                     // All non-left buttons use Pointer events to avoid breaking existing controls
                     HandleButtonEvent(args.Location, pointer);
                     break;
+
+                case TouchActionType.Wheel:
+                    // Mouse wheel scrolling
+                    HandleWheelEvent(args.Location, args.Distance.Delta);
+                    break;
             }
 
             // Handle specific device types
             if (pointer.DeviceType == PointerDeviceType.Pen)
             {
-                Console.WriteLine($"Apple Pencil detected with pressure: {pointer.Pressure}");
-                HandlePenInput(args.Location, pointer.Pressure);
-            }
-        }
-
-        private void HandleTrackpadScroll(TouchActionEventArgs args)
-        {
-            var deltaX = args.Distance.Delta.X;
-            var deltaY = args.Distance.Delta.Y;
-
-            Console.WriteLine($"Trackpad Scroll: deltaX={deltaX:F1}, deltaY={deltaY:F1}");
-
-            // Implement smooth panning based on trackpad deltas
-            // This provides native macOS trackpad feel
-            if (Math.Abs(deltaX) > 0.1f || Math.Abs(deltaY) > 0.1f)
-            {
-                HandleSmoothPan(deltaX, deltaY);
+                Console.WriteLine($"Stylus detected with pressure: {pointer.Pressure}");
+                HandleStylusInput(args.Location, pointer.Pressure);
             }
         }
 
@@ -123,7 +107,7 @@ namespace AppoMobi.Maui.Gestures.Examples
                 case MouseButton.Middle:
                     if (pointer.State == MouseButtonState.Pressed)
                     {
-                        Console.WriteLine("Middle-click detected (limited support on macCatalyst)");
+                        Console.WriteLine("Middle-click detected");
                         HandleMiddleClick(location);
                     }
                     break;
@@ -131,7 +115,7 @@ namespace AppoMobi.Maui.Gestures.Examples
                 case MouseButton.XButton1:
                     if (pointer.State == MouseButtonState.Pressed)
                     {
-                        Console.WriteLine("Back button (XButton1) pressed (limited support on macCatalyst)");
+                        Console.WriteLine("Back button (XButton1) pressed");
                         HandleBackButton();
                     }
                     break;
@@ -139,15 +123,31 @@ namespace AppoMobi.Maui.Gestures.Examples
                 case MouseButton.XButton2:
                     if (pointer.State == MouseButtonState.Pressed)
                     {
-                        Console.WriteLine("Forward button (XButton2) pressed (limited support on macCatalyst)");
+                        Console.WriteLine("Forward button (XButton2) pressed");
                         HandleForwardButton();
                     }
                     break;
 
                 case MouseButton.Extended:
-                    Console.WriteLine($"Extended mouse button #{pointer.ButtonNumber} {pointer.State} (not supported on macCatalyst)");
+                    Console.WriteLine($"Extended mouse button #{pointer.ButtonNumber} {pointer.State}");
                     HandleExtendedButton(pointer.ButtonNumber, pointer.State);
                     break;
+            }
+        }
+
+        private void HandleWheelEvent(PointF location, PointF wheelDelta)
+        {
+            Console.WriteLine($"Mouse wheel: deltaX={wheelDelta.X:F1}, deltaY={wheelDelta.Y:F1} at {location}");
+            
+            // Implement scrolling based on wheel deltas
+            if (Math.Abs(wheelDelta.Y) > 0.1f)
+            {
+                HandleVerticalScroll(wheelDelta.Y);
+            }
+            
+            if (Math.Abs(wheelDelta.X) > 0.1f)
+            {
+                HandleHorizontalScroll(wheelDelta.X);
             }
         }
 
@@ -224,76 +224,66 @@ namespace AppoMobi.Maui.Gestures.Examples
             // Handle gaming mouse buttons or other extended buttons
         }
 
-        private void HandlePenInput(PointF location, float pressure)
+        private void HandleStylusInput(PointF location, float pressure)
         {
-            Console.WriteLine($"Apple Pencil input at {location} with pressure {pressure:F2}");
+            Console.WriteLine($"Stylus input at {location} with pressure {pressure:F2}");
             // Handle pressure-sensitive drawing or writing
         }
 
-        private void HandleSmoothPan(float deltaX, float deltaY)
+        private void HandleVerticalScroll(float deltaY)
         {
-            Console.WriteLine($"Smooth trackpad pan: deltaX={deltaX:F1}, deltaY={deltaY:F1}");
+            Console.WriteLine($"Vertical scroll: {deltaY:F1}");
+            // Implement vertical scrolling
+        }
 
-            // Implement smooth panning with trackpad deltas
-            // This provides native macOS trackpad feel for content scrolling
-
-            // Example: Scroll content based on deltas
-            // ScrollContent(deltaX, deltaY);
-
-            // Example: Pan a map or canvas
-            // PanCanvas(deltaX, deltaY);
-
-            // The deltas are already in the correct direction and magnitude
-            // for natural trackpad scrolling behavior
+        private void HandleHorizontalScroll(float deltaX)
+        {
+            Console.WriteLine($"Horizontal scroll: {deltaX:F1}");
+            // Implement horizontal scrolling
         }
     }
 
     /// <summary>
-    /// macCatalyst Pointer Support Summary:
+    /// Android Mouse Support Summary:
     ///
     /// ARCHITECTURE:
     /// - Left button: Uses standard TouchActionType.Pressed/Released + Pointer data
     /// - Other buttons: Use TouchActionType.Pointer + Pointer data
-    /// - Trackpad scrolling: Uses TouchActionType.Moved with NumberOfTouches=0 + Distance deltas
+    /// - Wheel events: Use TouchActionType.Wheel + Distance deltas
     /// - This maintains backward compatibility with existing touch-based controls
     ///
     /// DETECTION:
-    /// - Mouse events detected via UITouch.Type == UITouchType.Indirect
-    /// - Apple Pencil detected via UITouch.Type == UITouchType.Stylus
-    /// - Hover tracking via UIHoverGestureRecognizer
-    /// - Trackpad scrolling via UIScrollView detection
-    /// - Pointer data only created for mouse/pen/trackpad events (null for finger touches)
+    /// - Mouse events detected via MotionEvent.GetToolType() == MotionEventToolType.Mouse
+    /// - Stylus detected via MotionEvent.GetToolType() == MotionEventToolType.Stylus
+    /// - Hover tracking via OnHoverListener
+    /// - Scroll wheel via OnGenericMotionListener
+    /// - Pointer data only created for mouse/stylus events (null for finger touches)
     ///
     /// ✅ SUPPORTED FEATURES:
-    /// - ✅ Left/Right click detection (basic)
-    /// - ✅ Apple Pencil detection and pressure during touch events
+    /// - ✅ Full mouse button detection (Left, Right, Middle, XButton1-2)
+    /// - ✅ Stylus detection and pressure sensitivity
     /// - ✅ Mouse vs touch differentiation
     /// - ✅ Hover tracking (mouse movement without button press)
     /// - ✅ Multi-button drag operations
     /// - ✅ Button state tracking during operations
-    /// - ✅ Trackpad scrolling (two-finger pan detection)
-    /// - ✅ Smooth trackpad deltas for native macOS feel
+    /// - ✅ Scroll wheel support (horizontal and vertical)
+    /// - ✅ API level compatibility (ButtonPress/Release for API 23+)
     ///
-    /// ❌ LIMITATIONS (UIKit constraints):
-    /// - ❌ Extended buttons (XButton3-9) not available
-    /// - ❌ Pressure tracking during hover not available
-    /// - ❌ Middle button detection limited
-    /// - ❌ Trackpad momentum phases not available (UIScrollView limitation)
-    /// - ⚠️ Right-click detection is heuristic-based, not as reliable as Windows
-    /// - ⚠️ Trackpad detection uses UIScrollView workaround, not native NSEvent
+    /// ⚠️ LIMITATIONS:
+    /// - ⚠️ Extended buttons (XButton3+) depend on Android version and hardware
+    /// - ⚠️ ButtonPress/ButtonRelease events only available on Android API 23+
+    /// - ⚠️ Some Android devices may not support all mouse features
     ///
     /// USAGE:
-    /// 1. Check if args.Pointer != null to detect mouse/pen/trackpad events
-    /// 2. Use args.Type to determine event type (Pressed/Released/Moved/Pointer)
+    /// 1. Check if args.Pointer != null to detect mouse/stylus events
+    /// 2. Use args.Type to determine event type (Pressed/Released/Moved/Pointer/Wheel)
     /// 3. Use args.Pointer.Button and args.Pointer.State for button-specific handling
-    /// 4. Use args.Pointer.DeviceType to distinguish Mouse vs Pen
-    /// 5. Use args.Pointer.Pressure for Apple Pencil pressure (during touch only)
-    /// 6. For trackpad: Check args.Type == Moved && args.NumberOfTouches == 0
-    /// 7. Use args.Distance.Delta for trackpad scroll deltas
+    /// 4. Use args.Pointer.DeviceType to distinguish Mouse vs Stylus
+    /// 5. Use args.Pointer.Pressure for stylus pressure sensitivity
+    /// 6. Use args.Distance.Delta for wheel scroll deltas
     /// </summary>
-    public class MacCatalystPointerSupportInfo
+    public class AndroidMouseSupportInfo
     {
-        // This class serves as documentation for the macCatalyst pointer implementation
-        // including mouse, trackpad, and Apple Pencil support
+        // This class serves as documentation for the Android mouse implementation
     }
 }
