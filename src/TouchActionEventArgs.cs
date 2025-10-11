@@ -155,6 +155,10 @@
         public object Context { get; set; }
 
         /// <summary>
+        /// To do, would be used in synchronous mode, not used yet
+        public bool Handled { get; set; }
+
+        /// <summary>
         /// How many fingers we have down actually
         /// </summary>
         public int NumberOfTouches { get; set; }

@@ -6,6 +6,13 @@ using System.Windows.Input;
 namespace AppoMobi.Maui.Gestures
 {
 
+    public enum ShareLockState
+    {
+        Initial,
+        Locked,
+        Unlocked
+    }
+
     public partial class TouchEffect : RoutingEffect, IDisposable
     {
         public TouchEffect()
@@ -689,19 +696,38 @@ namespace AppoMobi.Maui.Gestures
 
             //System.Diagnostics.Debug.WriteLine($"[TOUCH] Sent {action} {result} y {args.Location.Y:0}"); //x,y {args.Location.X:0}, {args.Location.Y:0} inside: {isInsideView}
 
+            if (result == TouchActionResult.Up || result == TouchActionResult.Down)
+            {
+                WIllLock = ShareLockState.Initial;
+            }
         }
 
         object lockOnTouch = new();
+        private ShareLockState wIllLock;
+
+        public ShareLockState WIllLock
+        {
+            get => wIllLock;
+            set
+            {
+                if (wIllLock != value)
+                {
+                    wIllLock = value;
+                    Debug.WriteLine($"WIllLock: {value}");
+                }
+            }
+        }
 
         public void OnTouchAction(TouchActionEventArgs args)
         {
 
             lock (lockOnTouch)
             {
-
-
+            
                 try
                 {
+
+
                     var element = Element;
 
                     var listener = element as IGestureListener;

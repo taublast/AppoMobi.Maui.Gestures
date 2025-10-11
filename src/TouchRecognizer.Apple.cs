@@ -1,4 +1,5 @@
-﻿using CoreGraphics;
+﻿using System.Diagnostics;
+using CoreGraphics;
 using Foundation;
 using UIKit;
 
@@ -25,7 +26,7 @@ namespace AppoMobi.Maui.Gestures
             if (_disposed || _parent == null || _parent.FormsEffect == null)
                 return;
 
-            if (_parent.FormsEffect.TouchMode == TouchHandlingStyle.Lock)
+            if (_parent.FormsEffect.TouchMode == TouchHandlingStyle.Lock || _parent.FormsEffect.TouchMode == TouchHandlingStyle.Manual)
             {
                 AttachPanning();
             }
@@ -37,6 +38,7 @@ namespace AppoMobi.Maui.Gestures
         }
 
         private UIPanGestureRecognizer _childPanGestureRecognizer; // Reference to child UIPanGestureRecognizer
+        private UIGestureRecognizer _parentScrollViewRecognizer; // Reference to parent ScrollView's recognizer
 
         void AttachPanning()
         {
@@ -45,7 +47,7 @@ namespace AppoMobi.Maui.Gestures
 
             _childPanGestureRecognizer = new UIPanGestureRecognizer(HandlePan)
             {
-                CancelsTouchesInView = false, // Allow touches to propagate
+                CancelsTouchesInView = true, // Allow touches to propagate
                 Delegate = this
             };
             _view.AddGestureRecognizer(_childPanGestureRecognizer);
@@ -64,12 +66,14 @@ namespace AppoMobi.Maui.Gestures
 
         /// <summary>
         /// Handles the pan gesture action.
+        /// For Lock mode: just blocks parent scrollviews by existing.
+        /// For SoftLock mode: controlled dynamically via State in TouchesMoved.
         /// </summary>
         /// <param name="gesture">The UIPanGestureRecognizer triggering the action.</param>
         private void HandlePan(UIPanGestureRecognizer gesture)
         {
-            //this pan recognizer just catches staff for LOCK to block upper scrollviews
-            //Console.WriteLine($"UIPanGestureRecognizer State: {gesture.State}");
+            // Do nothing - just being active blocks parent when needed
+            // SoftLock mode dynamically fails this gesture in TouchesMoved when not handled
         }
 
 
@@ -112,26 +116,58 @@ namespace AppoMobi.Maui.Gestures
                 return true; // Allow simultaneous recognition with child UIPanGestureRecognizer
             }
 
+            // Capture reference to parent ScrollView's pan recognizer for SoftLock mode
+            if (_parent.FormsEffect.TouchMode == TouchHandlingStyle.Manual)
+            {
+                if (othergesturerecognizer is UIPanGestureRecognizer &&
+                    othergesturerecognizer != _childPanGestureRecognizer &&
+                    _parentScrollViewRecognizer == null)
+                {
+                    _parentScrollViewRecognizer = othergesturerecognizer;
+                    Debug.WriteLine($"Captured parent recognizer: {othergesturerecognizer.GetType().Name}");
+                }
+            }
+
             return false;
         }
-        private bool ShouldRecUnlocked(UIGestureRecognizer gesturerecognizer, UIGestureRecognizer othergesturerecognizer)
+
+        private bool SetTrueCapture(UIGestureRecognizer gesturerecognizer, UIGestureRecognizer othergesturerecognizer)
+        {
+            // Capture reference to parent ScrollView's pan recognizer for SoftLock mode
+            if (_parent.FormsEffect.TouchMode == TouchHandlingStyle.Manual)
+            {
+                if (othergesturerecognizer is UIPanGestureRecognizer &&
+                    othergesturerecognizer != _childPanGestureRecognizer &&
+                    _parentScrollViewRecognizer == null)
+                {
+                    _parentScrollViewRecognizer = othergesturerecognizer;
+                    Debug.WriteLine($"Captured parent recognizer: {othergesturerecognizer.GetType().Name}");
+                }
+            }
+
+            return true;
+        }
+
+        private bool SetTrue(UIGestureRecognizer gesturerecognizer, UIGestureRecognizer othergesturerecognizer)
         {
             return true;
         }
 
-        private bool ShouldFailLocked(UIGestureRecognizer gesturerecognizer, UIGestureRecognizer othergesturerecognizer)
+        private bool SetFalse(UIGestureRecognizer gesturerecognizer, UIGestureRecognizer othergesturerecognizer)
         {
             return false;
         }
 
-        void ShareTouch()
+        void SoftLockTouch()
         {
-            ShouldBeRequiredToFailBy = ShouldRecUnlocked;
-            ShouldRecognizeSimultaneously = ShouldRecUnlocked;
+            // For SoftLock: recognize simultaneously and require us to fail to pass gesture to parent
+            ShouldBeRequiredToFailBy = SetFalse;
+            ShouldRecognizeSimultaneously = SetTrueCapture;  
         }
+
         void LockTouch()
         {
-            ShouldBeRequiredToFailBy = ShouldFailLocked;
+            ShouldBeRequiredToFailBy =  SetTrue;
             ShouldRecognizeSimultaneously = ShouldRecLocked;
         }
 
@@ -174,7 +210,6 @@ namespace AppoMobi.Maui.Gestures
 
             _parent.CountFingers = (int)NumberOfTouches;
 
-
             foreach (UITouch touch in touches.Cast<UITouch>())
             {
                 long id = ((IntPtr)touch.Handle).ToInt64();
@@ -185,15 +220,16 @@ namespace AppoMobi.Maui.Gestures
 
             CheckLockPan();
 
+            this.CancelsTouchesInView = false;
+
             if (_parent.FormsEffect.TouchMode == TouchHandlingStyle.Lock)
             {
                 LockTouch();
             }
-            //else
-            //if (_parent.FormsEffect.TouchMode == TouchHandlingStyle.Share)
-            //{
-            //    ShareTouch();
-            //}
+            else if (_parent.FormsEffect.TouchMode == TouchHandlingStyle.Manual)
+            {
+                SoftLockTouch();
+            }
             else
             {
                 UnlockTouch();
@@ -210,6 +246,30 @@ namespace AppoMobi.Maui.Gestures
             {
                 long id = ((IntPtr)touch.Handle).ToInt64();
                 _parent.FireEvent(id, TouchActionType.Moved, touch);
+            }
+
+            // For SoftLock mode: dynamically control gesture blocking based on WIllLock state
+            if (_parent.FormsEffect.TouchMode == TouchHandlingStyle.Manual)
+            {
+                if (_parent.FormsEffect.WIllLock == ShareLockState.Unlocked)
+                {
+                    // Consumer didn't handle - fail child pan to release parent ScrollView
+                    if (_childPanGestureRecognizer != null)
+                    {
+                        _childPanGestureRecognizer.State = UIGestureRecognizerState.Failed;
+                        Debug.WriteLine("Child pan FAILED - releasing to parent");
+                    }
+                }
+                else if (_parent.FormsEffect.WIllLock == ShareLockState.Locked)
+                {
+                    // Consumer wants control - fail parent ScrollView if it already started
+                    if (_parentScrollViewRecognizer != null &&
+                        _parentScrollViewRecognizer.State == UIGestureRecognizerState.Changed)
+                    {
+                        _parentScrollViewRecognizer.State = UIGestureRecognizerState.Cancelled;
+                        Debug.WriteLine("Parent ScrollView CANCELLED - taking control");
+                    }
+                }
             }
         }
 
@@ -241,6 +301,9 @@ namespace AppoMobi.Maui.Gestures
             }
 
             UnlockTouch();
+
+            // Reset parent recognizer reference for next gesture
+            _parentScrollViewRecognizer = null;
         }
 
         public override void TouchesCancelled(NSSet touches, UIEvent evt)
@@ -255,6 +318,8 @@ namespace AppoMobi.Maui.Gestures
 
             UnlockTouch();
 
+            // Reset parent recognizer reference for next gesture
+            _parentScrollViewRecognizer = null;
         }
 
         bool CheckPointIsInsideRecognizer(PointF xfPoint, TouchRecognizer recognizer)

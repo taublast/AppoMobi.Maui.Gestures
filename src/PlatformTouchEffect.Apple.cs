@@ -22,6 +22,8 @@ namespace AppoMobi.Maui.Gestures
 
                 FormsEffect?.OnTouchAction(args);
 
+                // Track if consumer handled the event (for Cooperative mode)
+                //WasHandled = args.Handled;
             }
             catch (Exception e)
             {
