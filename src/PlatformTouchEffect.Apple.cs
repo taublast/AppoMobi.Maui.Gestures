@@ -11,6 +11,10 @@ namespace AppoMobi.Maui.Gestures
         UIView _appleView;
         TouchRecognizer _touchRecognizer;
 
+#if MACCATALYST
+        private MouseButtons _currentPressedButtons = MouseButtons.None;
+#endif
+
         public void FireEvent(long id, TouchActionType actionType, PointF point)
         {
             try
@@ -49,6 +53,92 @@ namespace AppoMobi.Maui.Gestures
 
         }
 
+#if MACCATALYST
+        public void FireEventWithMouse(long id, TouchActionType actionType, PointF point,
+            MouseButton button, int buttonNumber, MouseButtonState buttonState, PointerDeviceType deviceType)
+        {
+            try
+            {
+                var args = new TouchActionEventArgs(id, actionType, point, null);
+                args.Wheel = Wheel;
+                args.NumberOfTouches = CountFingers;
+                args.IsInsideView = isInsideView;
+
+                // Set mouse-specific data
+                args.Pointer = new TouchEffect.PointerData
+                {
+                    Button = button,
+                    ButtonNumber = buttonNumber,
+                    State = buttonState,
+                    PressedButtons = _currentPressedButtons,
+                    DeviceType = deviceType,
+                    Pressure = 1.0f // macCatalyst mouse always has full pressure
+                };
+
+                FormsEffect?.OnTouchAction(args);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+        }
+
+        public void FireEventWithMouseMove(long id, TouchActionType actionType, PointF point, PointerDeviceType deviceType)
+        {
+            try
+            {
+                var args = new TouchActionEventArgs(id, actionType, point, null);
+                args.Wheel = Wheel;
+                args.NumberOfTouches = CountFingers;
+                args.IsInsideView = isInsideView;
+
+                // Set mouse-specific data for move events
+                args.Pointer = new TouchEffect.PointerData
+                {
+                    Button = MouseButton.Left, // Not relevant for move events
+                    ButtonNumber = 0, // Not relevant for move events
+                    State = MouseButtonState.Pressed, // Not relevant for move events
+                    PressedButtons = _currentPressedButtons,
+                    DeviceType = deviceType,
+                    Pressure = 1.0f
+                };
+
+                FormsEffect?.OnTouchAction(args);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+        }
+
+        public void FireEventPointerWithMouse(long id, PointF point, PointerDeviceType deviceType)
+        {
+            try
+            {
+                var args = new TouchActionEventArgs(id, TouchActionType.Pointer, point, null);
+                args.Wheel = Wheel;
+                args.NumberOfTouches = 0; // No touches, just pointer
+                args.IsInsideView = true; // Always inside when hovering
+
+                // Set mouse-specific data for pointer events (hover)
+                args.Pointer = new TouchEffect.PointerData
+                {
+                    Button = MouseButton.Left, // Not relevant for pointer events
+                    ButtonNumber = 0, // Not relevant for pointer events
+                    State = MouseButtonState.Released, // Not relevant for pointer events
+                    PressedButtons = MouseButtons.None, // No buttons pressed during hover
+                    DeviceType = deviceType,
+                    Pressure = 1.0f
+                };
+
+                FormsEffect?.OnTouchAction(args);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+        }
+#endif
 
         protected override void OnElementPropertyChanged(PropertyChangedEventArgs args)
         {

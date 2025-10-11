@@ -13,6 +13,10 @@ namespace AppoMobi.Maui.Gestures
 
         private bool _disposed;
 
+#if MACCATALYST
+        private MouseButtons _currentPressedButtons = MouseButtons.None;
+#endif
+
         public TouchRecognizer(UIView view, PlatformTouchEffect parent)
         {
             _view = view;
@@ -98,6 +102,14 @@ namespace AppoMobi.Maui.Gestures
         {
             this.CancelsTouchesInView = false; // Allow touches to propagate
             _view?.AddGestureRecognizer(this);
+
+#if MACCATALYST
+            // Enable mouse events for macCatalyst
+            if (_view != null)
+            {
+                _view.UserInteractionEnabled = true;
+            }
+#endif
 
             CheckLockPan();
         }
@@ -196,6 +208,92 @@ namespace AppoMobi.Maui.Gestures
             return view.Hidden || view.Alpha == 0 || IsViewOrAncestorHidden(view.Superview);
         }
 
+#if MACCATALYST
+        #region Mouse Event Handling
+
+        private (MouseButton button, int buttonNumber)? GetPressedButtonInfo(UIEvent evt)
+        {
+            // In macCatalyst, we need to inspect the UIEvent for mouse button information
+            // This is a simplified approach - macCatalyst doesn't expose all mouse buttons like Windows
+
+            // For now, we'll detect based on the event type and touch properties
+            // This is limited but works for basic left/right click detection
+
+            if (evt.Type == UIEventType.Presses)
+            {
+                // Check if this is a right-click (secondary click)
+                var allTouches = evt.AllTouches;
+                if (allTouches != null && allTouches.Count > 0)
+                {
+                    var touch = allTouches.AnyObject as UITouch;
+                    if (touch != null)
+                    {
+                        // In macCatalyst, right-click can be detected via touch properties
+                        // This is a basic implementation
+                        return (MouseButton.Left, 1); // Default to left for now
+                    }
+                }
+            }
+
+            return (MouseButton.Left, 1); // Default fallback
+        }
+
+        private (MouseButton button, int buttonNumber)? GetReleasedButtonInfo(UIEvent evt)
+        {
+            // Similar logic for release
+            return (MouseButton.Left, 1); // Default fallback
+        }
+
+        private MouseButtons GetMouseButtonFlag(MouseButton button)
+        {
+            return button switch
+            {
+                MouseButton.Left => MouseButtons.Left,
+                MouseButton.Right => MouseButtons.Right,
+                MouseButton.Middle => MouseButtons.Middle,
+                MouseButton.XButton1 => MouseButtons.XButton1,
+                MouseButton.XButton2 => MouseButtons.XButton2,
+                MouseButton.XButton3 => MouseButtons.XButton3,
+                MouseButton.XButton4 => MouseButtons.XButton4,
+                MouseButton.XButton5 => MouseButtons.XButton5,
+                MouseButton.XButton6 => MouseButtons.XButton6,
+                MouseButton.XButton7 => MouseButtons.XButton7,
+                MouseButton.XButton8 => MouseButtons.XButton8,
+                MouseButton.XButton9 => MouseButtons.XButton9,
+                _ => MouseButtons.None
+            };
+        }
+
+        private PointerDeviceType GetPointerDeviceType(UIEvent evt)
+        {
+            // In macCatalyst, we can check for Apple Pencil
+            if (evt.AllTouches != null && evt.AllTouches.Count > 0)
+            {
+                var touch = evt.AllTouches.AnyObject as UITouch;
+                if (touch != null && touch.Type == UITouchType.Stylus)
+                {
+                    return PointerDeviceType.Pen;
+                }
+            }
+            return PointerDeviceType.Mouse;
+        }
+
+        private PointF GetPointFromEvent(UIEvent evt, UITouch touch)
+        {
+            var locationInView = touch.LocationInView(_view);
+            return new PointF((float)(locationInView.X * TouchEffect.Density), (float)(locationInView.Y * TouchEffect.Density));
+        }
+
+        private bool IsMouseEvent(UITouch touch, UIEvent evt)
+        {
+            // In macCatalyst, we can detect mouse events by checking the touch type
+            // Mouse events typically have different characteristics than finger touches
+            return touch.Type == UITouchType.Indirect ||
+                   (touch.MaximumPossibleForce == 0 && touch.Force == 0); // Mouse doesn't have force
+        }
+
+        #endregion
+#endif
 
         // touches = touches of interest; evt = all touches of type UITouch
         public override void TouchesBegan(NSSet touches, UIEvent evt)
@@ -213,7 +311,46 @@ namespace AppoMobi.Maui.Gestures
             foreach (UITouch touch in touches.Cast<UITouch>())
             {
                 long id = ((IntPtr)touch.Handle).ToInt64();
-                _parent.FireEvent(id, TouchActionType.Pressed, touch);
+
+#if MACCATALYST
+                // Check if this is a mouse event in macCatalyst
+                if (IsMouseEvent(touch, evt))
+                {
+                    var deviceType = GetPointerDeviceType(evt);
+                    var point = GetPointFromEvent(evt, touch);
+                    var buttonInfo = GetPressedButtonInfo(evt);
+
+                    if (buttonInfo.HasValue)
+                    {
+                        _currentPressedButtons |= GetMouseButtonFlag(buttonInfo.Value.button);
+
+                        // IMPORTANT: Only use Pressed for primary button (Left/Button 1)
+                        // All other buttons use Pointer to avoid breaking existing touch logic
+                        if (buttonInfo.Value.button == MouseButton.Left)
+                        {
+                            // Primary button - use normal touch flow with mouse data
+                            _parent.FireEventWithMouse(id, TouchActionType.Pressed, point, buttonInfo.Value.button,
+                                buttonInfo.Value.buttonNumber, MouseButtonState.Pressed, deviceType);
+                        }
+                        else
+                        {
+                            // Secondary buttons (Right, Middle, XButton1, etc.) - use Pointer
+                            _parent.FireEventWithMouse(id, TouchActionType.Pointer, point, buttonInfo.Value.button,
+                                buttonInfo.Value.buttonNumber, MouseButtonState.Pressed, deviceType);
+                        }
+                    }
+                    else
+                    {
+                        // Fallback to regular touch event
+                        _parent.FireEvent(id, TouchActionType.Pressed, touch);
+                    }
+                }
+                else
+#endif
+                {
+                    // Regular touch event
+                    _parent.FireEvent(id, TouchActionType.Pressed, touch);
+                }
             }
 
             _parent.isInsideView = true;
@@ -245,7 +382,23 @@ namespace AppoMobi.Maui.Gestures
             foreach (UITouch touch in touches.Cast<UITouch>())
             {
                 long id = ((IntPtr)touch.Handle).ToInt64();
-                _parent.FireEvent(id, TouchActionType.Moved, touch);
+
+#if MACCATALYST
+                // Check if this is a mouse event in macCatalyst
+                if (IsMouseEvent(touch, evt))
+                {
+                    var deviceType = GetPointerDeviceType(evt);
+                    var point = GetPointFromEvent(evt, touch);
+
+                    // Handle mouse drag with button tracking
+                    _parent.FireEventWithMouseMove(id, TouchActionType.Moved, point, deviceType);
+                }
+                else
+#endif
+                {
+                    // Regular touch event
+                    _parent.FireEvent(id, TouchActionType.Moved, touch);
+                }
             }
 
             // For SoftLock mode: dynamically control gesture blocking based on WIllLock state
@@ -289,10 +442,54 @@ namespace AppoMobi.Maui.Gestures
                     bool isInside = CheckPointIsInsideRecognizer(xfPoint, this);
                     long id = ((IntPtr)touch.Handle).ToInt64();
 
-                    if (isInside)
-                        _parent.FireEvent(id, TouchActionType.Released, touch);
+#if MACCATALYST
+                    // Check if this is a mouse event in macCatalyst
+                    if (IsMouseEvent(touch, evt))
+                    {
+                        var deviceType = GetPointerDeviceType(evt);
+                        var point = GetPointFromEvent(evt, touch);
+                        var buttonInfo = GetReleasedButtonInfo(evt);
+
+                        if (buttonInfo.HasValue)
+                        {
+                            _currentPressedButtons &= ~GetMouseButtonFlag(buttonInfo.Value.button);
+
+                            // IMPORTANT: Only use Released for primary button (Left/Button 1)
+                            // All other buttons use Pointer to avoid breaking existing touch logic
+                            if (buttonInfo.Value.button == MouseButton.Left)
+                            {
+                                // Primary button - use normal touch flow with mouse data
+                                if (isInside)
+                                    _parent.FireEventWithMouse(id, TouchActionType.Released, point, buttonInfo.Value.button,
+                                        buttonInfo.Value.buttonNumber, MouseButtonState.Released, deviceType);
+                                else
+                                    _parent.FireEvent(id, TouchActionType.Exited, touch);
+                            }
+                            else
+                            {
+                                // Secondary buttons (Right, Middle, XButton1, etc.) - use Pointer
+                                _parent.FireEventWithMouse(id, TouchActionType.Pointer, point, buttonInfo.Value.button,
+                                    buttonInfo.Value.buttonNumber, MouseButtonState.Released, deviceType);
+                            }
+                        }
+                        else
+                        {
+                            // Fallback to regular touch event
+                            if (isInside)
+                                _parent.FireEvent(id, TouchActionType.Released, touch);
+                            else
+                                _parent.FireEvent(id, TouchActionType.Exited, touch);
+                        }
+                    }
                     else
-                        _parent.FireEvent(id, TouchActionType.Exited, touch);
+#endif
+                    {
+                        // Regular touch event
+                        if (isInside)
+                            _parent.FireEvent(id, TouchActionType.Released, touch);
+                        else
+                            _parent.FireEvent(id, TouchActionType.Exited, touch);
+                    }
                 }
             }
             else

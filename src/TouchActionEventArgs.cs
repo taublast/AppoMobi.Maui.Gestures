@@ -156,6 +156,7 @@
 
         /// <summary>
         /// To do, would be used in synchronous mode, not used yet
+        /// </summary>
         public bool Handled { get; set; }
 
         /// <summary>
@@ -164,6 +165,12 @@
         public int NumberOfTouches { get; set; }
 
         public TouchEffect.WheelEventArgs Wheel { get; set; }
+
+        /// <summary>
+        /// Mouse/Pointer specific data. Only set for mouse/pen events, null for touch events.
+        /// Check if not null to determine if this is a mouse/pen event.
+        /// </summary>
+        public TouchEffect.PointerData Pointer { get; set; }
 
         /// <summary>
         /// In pixels inside parent view,

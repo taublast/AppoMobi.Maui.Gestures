@@ -17,7 +17,8 @@
         //SwipeRight,
         //SwipeTop,
         //SwipeBottom,
-        Wheel
+        Wheel,
+        Pointer  // Mouse/pen pointer movement without press (desktop platforms)
     }
 
 }

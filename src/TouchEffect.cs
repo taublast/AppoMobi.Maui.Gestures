@@ -32,6 +32,40 @@ namespace AppoMobi.Maui.Gestures
             public PointF Center { get; set; }
         }
 
+        public class PointerData : EventArgs
+        {
+            /// <summary>
+            /// The specific button that triggered this event (for Press/Release events)
+            /// </summary>
+            public MouseButton Button { get; set; }
+
+            /// <summary>
+            /// Button number (1-based) - useful for gaming mice with many buttons
+            /// 1=Left, 2=Right, 3=Middle, 4+=Extended buttons
+            /// </summary>
+            public int ButtonNumber { get; set; }
+
+            /// <summary>
+            /// State of the button that triggered this event
+            /// </summary>
+            public MouseButtonState State { get; set; }
+
+            /// <summary>
+            /// All currently pressed buttons (flags)
+            /// </summary>
+            public MouseButtons PressedButtons { get; set; }
+
+            /// <summary>
+            /// Type of pointer device (Mouse, Pen, Touch)
+            /// </summary>
+            public PointerDeviceType DeviceType { get; set; }
+
+            /// <summary>
+            /// For pen: pressure (0.0 to 1.0), for mouse: always 1.0
+            /// </summary>
+            public float Pressure { get; set; } = 1.0f;
+        }
+
         public static bool LogEnabled { get; set; }
 
         /// <summary>
@@ -801,6 +835,15 @@ namespace AppoMobi.Maui.Gestures
 
                         Pinched?.Invoke(Element, args);
                         LastActionResult = TouchActionResult.Wheel;
+                    }
+
+                    else if (action == TouchActionType.Pointer)
+                    {
+                        if (listener != null)
+                        {
+                            SendAction(listener, TouchActionType.Pointer, args, TouchActionResult.Pointer);
+                        }
+                        LastActionResult = TouchActionResult.Pointer;
                     }
 
                     else if (action == TouchActionType.Moved

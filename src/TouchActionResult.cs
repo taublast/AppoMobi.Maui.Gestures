@@ -10,5 +10,10 @@ public enum TouchActionResult
     Panning,
     //Panned,
     //Swiped,
-    Wheel
+    Wheel,
+
+    /// <summary>
+    /// Mouse/pen pointer movement without press
+    /// </summary>
+    Pointer 
 }
