@@ -59,6 +59,8 @@ namespace AppoMobi.Maui.Gestures
 
         private readonly HashSet<uint> activePointerIds = new HashSet<uint>();
 
+        private readonly HashSet<uint> capturedPointerIds = new HashSet<uint>();
+
         public float ScaleLimitMin { get; set; } = 0.1f;
 
         public float ScaleLimitMax { get; set; } = 1000.0f;
@@ -88,20 +90,98 @@ namespace AppoMobi.Maui.Gestures
                 Scale = (float)ScaleFactor,
                 Center = new PointF((float)windowsPoint.X * TouchEffect.Density, (float)windowsPoint.Y * TouchEffect.Density)
             };
+
+            // Always fire the event to YOUR TouchEffect first
             FireEvent(sender, TouchActionType.Wheel, args);
+
+            // Then decide whether to block it from parent ScrollView
+            // For Manual mode: block wheel events when WIllLock is Locked (consumer has control)
+            if (_touchEffect.TouchMode == TouchHandlingStyle.Manual)
+            {
+                if (_touchEffect.WIllLock == ShareLockState.Locked)
+                {
+                    // Consumer has control - block wheel from reaching parent ScrollView
+                    args.Handled = true;
+                    System.Diagnostics.Debug.WriteLine("Windows: Wheel event delivered to effect but BLOCKED from parent - Manual mode locked");
+                }
+            }
+            // For Lock mode: always block wheel events from parent
+            else if (_touchEffect.TouchMode == TouchHandlingStyle.Lock)
+            {
+                args.Handled = true;
+                System.Diagnostics.Debug.WriteLine("Windows: Wheel event delivered to effect but BLOCKED from parent - Lock mode");
+            }
         }
 
         void OnPointerPressed(object sender, PointerRoutedEventArgs args)
         {
             _pressed = true;
             activePointerIds.Add(args.Pointer.PointerId);
+
+            // Handle pointer capture based on touch mode
+            if (_touchEffect.TouchMode == TouchHandlingStyle.Lock)
+            {
+                // Lock mode: always capture pointer to block parent
+                if (frameworkElement.CapturePointer(args.Pointer))
+                {
+                    capturedPointerIds.Add(args.Pointer.PointerId);
+                }
+                frameworkElement.ManipulationMode = ManipulationModes.None;
+            }
+            else if (_touchEffect.TouchMode == TouchHandlingStyle.Manual)
+            {
+                // Manual mode: start without capture, will be controlled dynamically in Move
+                frameworkElement.ManipulationMode = ManipulationModes.System;
+            }
+            else
+            {
+                // Default mode: capture pointer with system manipulation
+                if (frameworkElement.CapturePointer(args.Pointer))
+                {
+                    capturedPointerIds.Add(args.Pointer.PointerId);
+                }
+                frameworkElement.ManipulationMode = ManipulationModes.System;
+            }
+
             FireEvent(sender, TouchActionType.Pressed, args);
         }
 
         void OnPointerMoved(object sender, PointerRoutedEventArgs args)
         {
             if (_pressed)
+            {
                 FireEvent(sender, TouchActionType.Moved, args);
+
+                // For Manual mode: dynamically control pointer capture and manipulation based on WIllLock state
+                if (_touchEffect.TouchMode == TouchHandlingStyle.Manual)
+                {
+                    if (_touchEffect.WIllLock == ShareLockState.Locked)
+                    {
+                        // Consumer wants control - capture pointer and disable manipulation to block parent
+                        if (!capturedPointerIds.Contains(args.Pointer.PointerId))
+                        {
+                            if (frameworkElement.CapturePointer(args.Pointer))
+                            {
+                                capturedPointerIds.Add(args.Pointer.PointerId);
+                                frameworkElement.ManipulationMode = ManipulationModes.None;
+                                System.Diagnostics.Debug.WriteLine("Windows: Pointer CAPTURED + ManipulationMode.None - taking control");
+                            }
+                        }
+                    }
+                    else if (_touchEffect.WIllLock == ShareLockState.Unlocked)
+                    {
+                        // Consumer doesn't want control - release pointer and enable system manipulation to allow parent
+                        if (capturedPointerIds.Contains(args.Pointer.PointerId))
+                        {
+                            frameworkElement.ReleasePointerCapture(args.Pointer);
+                            capturedPointerIds.Remove(args.Pointer.PointerId);
+                            frameworkElement.ManipulationMode = ManipulationModes.System;
+                            System.Diagnostics.Debug.WriteLine("Windows: Pointer RELEASED + ManipulationMode.System - releasing to parent");
+                        }
+                    }
+                    // For Initial state, do nothing (keep previous state)
+                }
+            }
         }
 
         void OnPointerReleased(object sender, PointerRoutedEventArgs args)
@@ -111,6 +191,16 @@ namespace AppoMobi.Maui.Gestures
                 activePointerIds.Remove(args.Pointer.PointerId);
                 FireEvent(sender, TouchActionType.Released, args);
                 _pressed = activePointerIds.Count > 0;
+
+                // Release pointer capture for Manual/Lock modes when all fingers are released
+                if (!_pressed)
+                {
+                    if (capturedPointerIds.Contains(args.Pointer.PointerId))
+                    {
+                        frameworkElement.ReleasePointerCapture(args.Pointer);
+                        capturedPointerIds.Remove(args.Pointer.PointerId);
+                    }
+                }
             }
             catch (Exception e)
             {
@@ -127,6 +217,16 @@ namespace AppoMobi.Maui.Gestures
                     activePointerIds.Remove(args.Pointer.PointerId);
                     _pressed = activePointerIds.Count > 0;
                     FireEvent(sender, TouchActionType.Exited, args);
+
+                    // Release pointer capture when all fingers are gone
+                    if (!_pressed)
+                    {
+                        if (capturedPointerIds.Contains(args.Pointer.PointerId))
+                        {
+                            frameworkElement.ReleasePointerCapture(args.Pointer);
+                            capturedPointerIds.Remove(args.Pointer.PointerId);
+                        }
+                    }
                 }
             }
             catch (Exception e)
