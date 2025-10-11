@@ -59,9 +59,18 @@ public partial class PlatformTouchEffect
                     case MotionEventActions.Down:
                         //case MotionEventActions.PointerDown:
                         if (_parent.FormsEffect.TouchMode == TouchHandlingStyle.Lock)
+                        {
                             LockInput(sender);
-                        else
+                        }
+                        else if (_parent.FormsEffect.TouchMode == TouchHandlingStyle.Manual)
+                        {
+                            // For Manual mode: start unlocked, will be controlled dynamically in Move
                             UnlockInput(sender);
+                        }
+                        else
+                        {
+                            UnlockInput(sender);
+                        }
                         _parent.FireEvent(id, TouchActionType.Pressed, coorsInsideView);
                         break;
 
@@ -72,6 +81,24 @@ public partial class PlatformTouchEffect
                             id = motionEvent.GetPointerId(pointerIndex);
                             coorsInsideView = new PointF(motionEvent.GetX(pointerIndex), motionEvent.GetY(pointerIndex));
                             _parent.FireEvent(id, TouchActionType.Moved, coorsInsideView);
+                        }
+
+                        // For Manual mode: dynamically control parent input based on WIllLock state
+                        if (_parent.FormsEffect.TouchMode == TouchHandlingStyle.Manual)
+                        {
+                            if (_parent.FormsEffect.WIllLock == ShareLockState.Locked)
+                            {
+                                // Consumer wants control - block parent
+                                LockInput(sender);
+                                System.Diagnostics.Debug.WriteLine("Android: Parent LOCKED - taking control");
+                            }
+                            else if (_parent.FormsEffect.WIllLock == ShareLockState.Unlocked)
+                            {
+                                // Consumer doesn't want control - allow parent
+                                UnlockInput(sender);
+                                System.Diagnostics.Debug.WriteLine("Android: Parent UNLOCKED - releasing to parent");
+                            }
+                            // For Initial state, do nothing (keep previous state)
                         }
                         break;
 
