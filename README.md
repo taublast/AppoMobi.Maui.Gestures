@@ -8,44 +8,14 @@ This library is used by [DrawnUI for .NET MAUI](https://github.com/taublast/Draw
 
 ---
 
-## Table of Contents
-
-- [What's New](#whats-new)
-- [Features](#features)
-- [Installation](#installation)
-- [Basic Usage](#basic-usage)
-  - [XAML](#xaml)
-  - [Code-Behind](#code-behind)
-- [Touch Handling Modes](#touch-handling-modes)
-  - [Default Mode](#default-mode)
-  - [Lock Mode](#lock-mode)
-  - [Manual Mode](#manual-mode-new)
-  - [Disabled Mode](#disabled-mode)
-- [Pointer and Pen Support](#pointer-and-pen-support)
-- [Advanced Usage](#advanced-usage)
-  - [Manual Gesture Processing](#manual-gesture-processing)
-  - [IGestureListener Interface](#igesturelistener-interface)
-  - [Multi-Touch Support](#multi-touch-support)
-- [Configuration](#configuration)
-- [Best Practices](#best-practices)
-- [Platform-Specific Notes](#platform-specific-notes)
-- [Troubleshooting](#troubleshooting)
-
----
-
 ## What's New
 
 ### Version 1.10.1
 * Added `Manual` touch mode for dynamic gesture control with parent controls, allowing true cooperative gesture handling inside ScrollViews and other containers.
 * Pointer Data Support: Added rich pointer/mouse event data with `TouchActionEventArgs.Pointer` property
 * Windows (Full Support): Complete mouse button detection (Left, Right, Middle, XButton1-9), pen pressure, hover tracking
-* macCatalyst (Basic Support): Left/Right click detection, Apple Pencil detection, hover tracking, trackpad scrolling via UIScrollView
-  * Android (Good Support): Mouse button detection (Left, Right, Middle, XButton1-2), stylus pressure, hover tracking, scroll wheel
-* Smart Button Handling: Left button uses standard touch events, other buttons use Pointer events for backward compatibility
-* Gaming Mouse Support: Extended buttons (XButton1-9) with unlimited button detection via `ButtonNumber` property (Windows only)
-* Pen/Stylus Integration: Pressure sensitivity during touch events (Windows, macCatalyst with Apple Pencil)
-* Hover Tracking: Mouse movement without button press (Windows full, macCatalyst basic)
-  * Trackpad Scrolling: Two-finger trackpad pan detection with smooth deltas (macCatalyst via UIScrollView)
+* Android (Limited Support): Mouse button detection (Left, Right, Middle, XButton1-2), stylus pressure, hover tracking, scroll wheel
+* Hover Tracking: Mouse movement without button press (Windows, Android)
 
 ---
 
