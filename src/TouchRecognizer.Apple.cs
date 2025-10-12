@@ -42,6 +42,19 @@ namespace AppoMobi.Maui.Gestures
             {
                 DetachPanning();
             }
+
+            if (_parent.FormsEffect.TouchMode == TouchHandlingStyle.Lock)
+            {
+                LockTouch();
+            }
+            else if (_parent.FormsEffect.TouchMode == TouchHandlingStyle.Manual)
+            {
+                SoftLockTouch();
+            }
+            else
+            {
+                UnlockTouch();
+            }
         }
 
         private UIPanGestureRecognizer _childPanGestureRecognizer; // Reference to child UIPanGestureRecognizer
@@ -103,7 +116,6 @@ namespace AppoMobi.Maui.Gestures
 
         public void Attach()
         {
-            this.CancelsTouchesInView = false; // Allow touches to propagate
             _view?.AddGestureRecognizer(this);
 
 #if MACCATALYST
@@ -475,21 +487,6 @@ namespace AppoMobi.Maui.Gestures
             _parent.isInsideView = true;
 
             CheckLockPan();
-
-            this.CancelsTouchesInView = false;
-
-            if (_parent.FormsEffect.TouchMode == TouchHandlingStyle.Lock)
-            {
-                LockTouch();
-            }
-            else if (_parent.FormsEffect.TouchMode == TouchHandlingStyle.Manual)
-            {
-                SoftLockTouch();
-            }
-            else
-            {
-                UnlockTouch();
-            }
         }
 
         public override void TouchesMoved(NSSet touches, UIEvent evt)
@@ -532,16 +529,16 @@ namespace AppoMobi.Maui.Gestures
                         Debug.WriteLine("Child pan FAILED - releasing to parent");
                     }
                 }
-                else if (_parent.FormsEffect.WIllLock == ShareLockState.Locked)
-                {
-                    // Consumer wants control - fail parent ScrollView if it already started
-                    if (_parentScrollViewRecognizer != null &&
-                        _parentScrollViewRecognizer.State == UIGestureRecognizerState.Changed)
-                    {
-                        _parentScrollViewRecognizer.State = UIGestureRecognizerState.Cancelled;
-                        Debug.WriteLine("Parent ScrollView CANCELLED - taking control");
-                    }
-                }
+                //else if (_parent.FormsEffect.WIllLock == ShareLockState.Locked)
+                //{
+                //    // Consumer wants control - fail parent ScrollView if it already started
+                //    if (_parentScrollViewRecognizer != null &&
+                //        _parentScrollViewRecognizer.State == UIGestureRecognizerState.Changed)
+                //    {
+                //        _parentScrollViewRecognizer.State = UIGestureRecognizerState.Cancelled;
+                //        Debug.WriteLine("Parent ScrollView CANCELLED - taking control");
+                //    }
+                //}
             }
         }
 
