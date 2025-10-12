@@ -33,6 +33,8 @@ namespace AppoMobi.Maui.Gestures
             if (_disposed || _parent == null || _parent.FormsEffect == null)
                 return;
 
+            this.CancelsTouchesInView = false;
+
             if (_parent.FormsEffect.TouchMode == TouchHandlingStyle.Lock || _parent.FormsEffect.TouchMode == TouchHandlingStyle.Manual)
             {
                 AttachPanning();
@@ -67,7 +69,7 @@ namespace AppoMobi.Maui.Gestures
 
             _childPanGestureRecognizer = new UIPanGestureRecognizer(HandlePan)
             {
-                CancelsTouchesInView = true, // Allow touches to propagate
+                CancelsTouchesInView = false,  
                 Delegate = this
             };
             _view.AddGestureRecognizer(_childPanGestureRecognizer);
