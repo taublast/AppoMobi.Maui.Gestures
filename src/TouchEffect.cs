@@ -69,9 +69,9 @@ namespace AppoMobi.Maui.Gestures
         public static bool LogEnabled { get; set; }
 
         /// <summary>
-        /// How much finger can move between DOWN and UP for the gestured to be still considered as TAPPED. In points, not pixels.
+        /// How much finger can move for the gestured to be still considered as TAPPED. In points, not pixels, default is 5.
         /// </summary>
-        public static float TappedVelocityThresholdPoints = 200f;
+        public static float TappedCancelMoveThresholdPoints = 5f;
 
         protected MultitouchTracker _manipulationTracker = new();
 
@@ -145,7 +145,7 @@ namespace AppoMobi.Maui.Gestures
 #endif
         }
 
-        private float _thresholdVelocityPixels;
+        private float _thresholdCancelTapIfMovePixels;
 
         static float _density = 0f;
         public static float Density
@@ -778,7 +778,7 @@ namespace AppoMobi.Maui.Gestures
                         || action == TouchActionType.Pressed)
                     {
                         _lastArgs = null;
-                        _thresholdVelocityPixels = TappedVelocityThresholdPoints * Density;
+                        _thresholdCancelTapIfMovePixels = TappedCancelMoveThresholdPoints * Density;
 
                         TimerStarted = DateTime.Now;
                         lockLongPress = false;
@@ -915,8 +915,9 @@ namespace AppoMobi.Maui.Gestures
                                && lastDown != null
                               && action == TouchActionType.Released
                               && !lastDown.PreventDefault
-                              &&  Math.Abs(args.Distance.TotalVelocity.X) < _thresholdVelocityPixels
-                                && Math.Abs(args.Distance.TotalVelocity.Y)  < _thresholdVelocityPixels)
+                              &&  Math.Abs(args.Distance.Total.X) < _thresholdCancelTapIfMovePixels
+                                && Math.Abs(args.Distance.Total.Y)  < _thresholdCancelTapIfMovePixels
+                                )
                             {
                                 if (listener != null)
                                 {

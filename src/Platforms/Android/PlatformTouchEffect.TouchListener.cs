@@ -99,13 +99,11 @@ public partial class PlatformTouchEffect
                             {
                                 // Consumer wants control - block parent
                                 LockInput(sender);
-                                System.Diagnostics.Debug.WriteLine("Android: Parent LOCKED - taking control");
                             }
                             else if (_parent.FormsEffect.WIllLock == ShareLockState.Unlocked)
                             {
                                 // Consumer doesn't want control - allow parent
                                 UnlockInput(sender);
-                                System.Diagnostics.Debug.WriteLine("Android: Parent UNLOCKED - releasing to parent");
                             }
                             // For Initial state, do nothing (keep previous state)
                         }
