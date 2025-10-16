@@ -97,6 +97,12 @@ namespace AppoMobi.Maui.Gestures
             }
         }
 
+        /// <summary>
+        /// Returns TRUE if still locked
+        /// </summary>
+        /// <param name="uid"></param>
+        /// <param name="ms"></param>
+        /// <returns></returns>
         public static bool CheckLockAndSet([CallerMemberName] string uid = null, int ms = 500)
         {
             if (CheckLocked(uid))

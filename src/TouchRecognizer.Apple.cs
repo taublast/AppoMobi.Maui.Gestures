@@ -203,7 +203,7 @@ namespace AppoMobi.Maui.Gestures
 
         void LockTouch()
         {
-            ShouldBeRequiredToFailBy =  SetTrue;
+            ShouldBeRequiredToFailBy = SetFalse;
             ShouldRecognizeSimultaneously = ShouldRecLocked;
         }
 
