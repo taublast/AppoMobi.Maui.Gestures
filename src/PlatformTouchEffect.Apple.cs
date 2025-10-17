@@ -147,6 +147,7 @@ namespace AppoMobi.Maui.Gestures
             {
                 var args = new TouchActionEventArgs(id, TouchActionType.Pointer, point, null);
                 args.IsInsideView = true;
+                args.NumberOfTouches = CountFingers;
                 args.Distance.Delta = scrollDelta;
                 args.Distance.Total = scrollDelta;
                 args.Distance.Start = point;

@@ -385,7 +385,7 @@ public partial class PlatformTouchEffect
                     var scrollY = e.GetAxisValue(Axis.Vscroll);
 
                     // Fire wheel event
-                    _parent.FireEventWheel(0, location, new PointF(scrollX, scrollY));
+                    _parent.FireEventScroll(0, location, new PointF(scrollX, scrollY));
                     return true;
                 }
 

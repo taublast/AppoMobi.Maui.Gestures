@@ -59,7 +59,7 @@ namespace AppoMobi.Maui.Gestures
             public int ButtonNumber { get; set; }
 
             /// <summary>
-            /// This is a scrolling gesture
+            /// This is a scrolling gesture, logic is "Scrolled" will not have start or end of scrolling.
             /// </summary>
             public bool IsScrolling { get; set; }
 

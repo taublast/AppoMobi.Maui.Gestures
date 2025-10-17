@@ -150,28 +150,23 @@ namespace AppoMobi.Maui.Gestures
             }
         }
 
-        void FireEventWheel(int id, PointF pointerLocation, PointF wheelDelta)
+        void FireEventScroll(int id, PointF pointerLocation, PointF scrollDelta)
         {
             try
             {
-                var args = new TouchActionEventArgs(id, TouchActionType.Wheel, pointerLocation, null);
-                args.Wheel = Wheel;
+                var args = new TouchActionEventArgs(id, TouchActionType.Pointer, pointerLocation, null);
                 args.NumberOfTouches = CountFingers;
-                args.IsInsideView = isInsideView;
-                args.Distance.Delta = wheelDelta;
-                args.Distance.Total = wheelDelta;
+                args.IsInsideView = true;
+                args.Distance.Delta = scrollDelta;
+                args.Distance.Total = scrollDelta;
                 args.Distance.Start = pointerLocation;
-                args.Distance.End = pointerLocation.Add(wheelDelta);
+                args.Distance.End = pointerLocation.Add(scrollDelta);
 
                 // Set wheel-specific pointer data
                 args.Pointer = new TouchEffect.PointerData
                 {
-                    Button = MouseButton.Left, // Not relevant for wheel
-                    ButtonNumber = 0, // Not relevant for wheel
-                    State = MouseButtonState.Released, // Not relevant for wheel
-                    PressedButtons = MouseButtons.None, // No buttons for wheel
                     DeviceType = PointerDeviceType.Mouse,
-                    Pressure = 1.0f
+                    IsScrolling = true,
                 };
 
                 FormsEffect?.OnTouchAction(args);
