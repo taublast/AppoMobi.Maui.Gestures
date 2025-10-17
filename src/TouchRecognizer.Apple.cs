@@ -91,7 +91,6 @@ namespace AppoMobi.Maui.Gestures
         /// <param name="gesture">The UIPanGestureRecognizer triggering the action.</param>
         private void HandlePan(UIPanGestureRecognizer gesture)
         {
-
             // Handle two-finger trackpad scroll  
             if (gesture.State == UIGestureRecognizerState.Changed && _parent != null)
             {
@@ -113,7 +112,8 @@ namespace AppoMobi.Maui.Gestures
                 // Only fire if there's actual movement
                 if (delta.X != 0 || delta.Y != 0)
                 {
-                    Debug.WriteLine($"[Pan/Scroll] Delta: ({delta.X:F2}, {delta.Y:F2}) at ({point.X:F0}, {point.Y:F0})");
+                    Debug.WriteLine(
+                        $"[Pan/Scroll] Delta: ({delta.X:F2}, {delta.Y:F2}) at ({point.X:F0}, {point.Y:F0})");
 
                     // Fire wheel event for scroll
                     _parent.FireEventScroll(0, point, delta);
@@ -158,7 +158,8 @@ namespace AppoMobi.Maui.Gestures
                 // Add two-finger tap recognizer for right-click (WWDC 2020: context menus use button mask to recognize two-finger taps)
                 var twoFingerTapRecognizer = new UITapGestureRecognizer(HandleTwoFingerTap)
                 {
-                    NumberOfTouchesRequired = 2, Delegate = this
+                    ButtonMaskRequired = UIEventButtonMask.Secondary,
+                    Delegate = this
                 };
                 _view.AddGestureRecognizer(twoFingerTapRecognizer);
 
