@@ -2,9 +2,6 @@
 using Microsoft.Maui.Controls.Platform;
 using System.ComponentModel;
 using UIKit;
-#if MACCATALYST
-using AppKit;
-#endif
 
 namespace AppoMobi.Maui.Gestures
 {
@@ -13,10 +10,6 @@ namespace AppoMobi.Maui.Gestures
 
         UIView _appleView;
         TouchRecognizer _touchRecognizer;
-
-#if MACCATALYST
-        private MouseButtons _currentPressedButtons = MouseButtons.None;
-#endif
 
         public void FireEvent(long id, TouchActionType actionType, PointF point)
         {
@@ -56,7 +49,6 @@ namespace AppoMobi.Maui.Gestures
 
         }
 
-#if MACCATALYST
         public void FireEventWithMouse(long id, TouchActionType actionType, PointF point,
             MouseButton button, int buttonNumber, MouseButtonState buttonState, MouseButtons pressedButtons,
             PointerDeviceType deviceType, float pressure)
@@ -180,7 +172,6 @@ namespace AppoMobi.Maui.Gestures
                 Console.WriteLine(e);
             }
         }
-#endif
 
         protected override void OnElementPropertyChanged(PropertyChangedEventArgs args)
         {

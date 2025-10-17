@@ -3,7 +3,8 @@
     "allow": [
       "Bash(dotnet new:*)",
       "Bash(dotnet build:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []

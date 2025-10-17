@@ -2,9 +2,6 @@
 using CoreGraphics;
 using Foundation;
 using UIKit;
-#if MACCATALYST
-using AppKit;
-#endif
 
 namespace AppoMobi.Maui.Gestures
 {
@@ -16,9 +13,8 @@ namespace AppoMobi.Maui.Gestures
 
         private bool _disposed;
 
-#if MACCATALYST
-        private MouseButtons _currentPressedButtons = MouseButtons.None;
-#endif
+        // Store button info per touch ID (iOS 13.4+)
+        private Dictionary<long, (MouseButton button, int buttonNumber)> _touchButtonMap = new Dictionary<long, (MouseButton, int)>();
 
         public TouchRecognizer(UIView view, PlatformTouchEffect parent)
         {
@@ -70,7 +66,8 @@ namespace AppoMobi.Maui.Gestures
             _childPanGestureRecognizer = new UIPanGestureRecognizer(HandlePan)
             {
                 CancelsTouchesInView = false,  
-                Delegate = this
+                Delegate = this,
+                AllowedScrollTypesMask = UIScrollTypeMask.All
             };
             _view.AddGestureRecognizer(_childPanGestureRecognizer);
         }
@@ -120,8 +117,7 @@ namespace AppoMobi.Maui.Gestures
         {
             _view?.AddGestureRecognizer(this);
 
-#if MACCATALYST
-            // Enable pointer events for macCatalyst
+            // Enable pointer events (iOS 13.4+)
             if (_view != null && UIDevice.CurrentDevice.CheckSystemVersion(13, 4))
             {
                 _view.UserInteractionEnabled = true;
@@ -130,7 +126,6 @@ namespace AppoMobi.Maui.Gestures
                 var hoverGestureRecognizer = new UIHoverGestureRecognizer(HandleHover);
                 _view.AddGestureRecognizer(hoverGestureRecognizer);
             }
-#endif
 
             CheckLockPan();
         }
@@ -229,13 +224,14 @@ namespace AppoMobi.Maui.Gestures
             return view.Hidden || view.Alpha == 0 || IsViewOrAncestorHidden(view.Superview);
         }
 
-#if MACCATALYST
-        #region Pointer Event Handling
+        #region Pointer Event Handling (iOS 13.4+)
 
         private (MouseButton button, int buttonNumber)? GetButtonFromEvent(UIEvent evt)
         {
             // Use UIEvent.ButtonMask (iOS 13.4+) for reliable button detection
             // Reference: https://developer.apple.com/videos/play/wwdc2020/10094/
+            // IMPORTANT: ButtonMask shows CURRENTLY pressed buttons, so check this during TouchesBegan
+            // and store the result per touch ID for use in TouchesEnded
 
             if (evt == null)
                 return null;
@@ -251,8 +247,8 @@ namespace AppoMobi.Maui.Gestures
             if ((buttonMask & UIEventButtonMask.Secondary) != 0)
                 return (MouseButton.Right, 2);
 
-            // Default to left if no button mask (shouldn't happen)
-            return (MouseButton.Left, 1);
+            // No buttons pressed (happens during release or hover)
+            return null;
         }
 
         private PointerDeviceType GetPointerDeviceType(UITouch touch)
@@ -308,7 +304,6 @@ namespace AppoMobi.Maui.Gestures
         }
 
         #endregion
-#endif
 
         // touches = touches of interest; evt = all touches of type UITouch
         public override void TouchesBegan(NSSet touches, UIEvent evt)
@@ -327,8 +322,7 @@ namespace AppoMobi.Maui.Gestures
             {
                 long id = ((IntPtr)touch.Handle).ToInt64();
 
-#if MACCATALYST
-                // Check if this is a pointer event (mouse/pen) in macCatalyst (iOS 13.4+)
+                // Check if this is a pointer event (mouse/pen) on iOS 13.4+
                 if (IsPointerEvent(touch))
                 {
                     var deviceType = GetPointerDeviceType(touch);
@@ -338,7 +332,8 @@ namespace AppoMobi.Maui.Gestures
 
                     if (buttonInfo.HasValue)
                     {
-                        _currentPressedButtons = pressedButtons;
+                        // Store button info for this touch ID to use later in TouchesEnded
+                        _touchButtonMap[id] = buttonInfo.Value;
 
                         // Get pressure for Apple Pencil
                         var pressure = touch.Type == UITouchType.Stylus ? (float)touch.Force : 1.0f;
@@ -356,7 +351,6 @@ namespace AppoMobi.Maui.Gestures
                     }
                 }
                 else
-#endif
                 {
                     // Regular touch event
                     _parent.FireEvent(id, TouchActionType.Pressed, touch);
@@ -378,8 +372,7 @@ namespace AppoMobi.Maui.Gestures
             {
                 long id = ((IntPtr)touch.Handle).ToInt64();
 
-#if MACCATALYST
-                // Check if this is a pointer event (mouse/pen) in macCatalyst
+                // Check if this is a pointer event (mouse/pen) on iOS 13.4+
                 if (IsPointerEvent(touch))
                 {
                     var deviceType = GetPointerDeviceType(touch);
@@ -393,7 +386,6 @@ namespace AppoMobi.Maui.Gestures
                     _parent.FireEventWithMouseMove(id, TouchActionType.Moved, point, pressedButtons, deviceType, pressure);
                 }
                 else
-#endif
                 {
                     // Regular touch event
                     _parent.FireEvent(id, TouchActionType.Moved, touch);
@@ -441,25 +433,23 @@ namespace AppoMobi.Maui.Gestures
                     bool isInside = CheckPointIsInsideRecognizer(xfPoint, this);
                     long id = ((IntPtr)touch.Handle).ToInt64();
 
-#if MACCATALYST
-                    // Check if this is a pointer event (mouse/pen) in macCatalyst
+                    // Check if this is a pointer event (mouse/pen) on iOS 13.4+
                     if (IsPointerEvent(touch))
                     {
                         var deviceType = GetPointerDeviceType(touch);
                         var point = GetPointFromTouch(touch);
-                        var buttonInfo = GetButtonFromEvent(evt);
                         var pressedButtons = GetCurrentPressedButtons(evt);
 
-                        if (buttonInfo.HasValue)
+                        // Retrieve button info that was stored during TouchesBegan
+                        // (ButtonMask is empty during release, so we need the stored value)
+                        if (_touchButtonMap.TryGetValue(id, out var buttonInfo))
                         {
-                            _currentPressedButtons = pressedButtons;
-
                             // Get pressure for Apple Pencil
                             var pressure = touch.Type == UITouchType.Stylus ? (float)touch.Force : 1.0f;
 
                             // Primary button (Left) uses Released event type for backward compatibility
                             // Secondary buttons use Pointer event type
-                            var eventType = buttonInfo.Value.button == MouseButton.Left
+                            var eventType = buttonInfo.button == MouseButton.Left
                                 ? (isInside ? TouchActionType.Released : TouchActionType.Exited)
                                 : TouchActionType.Pointer;
 
@@ -467,17 +457,19 @@ namespace AppoMobi.Maui.Gestures
 
                             if (eventType != TouchActionType.Exited)
                             {
-                                _parent.FireEventWithMouse(id, eventType, point, buttonInfo.Value.button,
-                                    buttonInfo.Value.buttonNumber, buttonState, pressedButtons, deviceType, pressure);
+                                _parent.FireEventWithMouse(id, eventType, point, buttonInfo.button,
+                                    buttonInfo.buttonNumber, buttonState, pressedButtons, deviceType, pressure);
                             }
                             else
                             {
                                 _parent.FireEvent(id, TouchActionType.Exited, touch);
                             }
+
+                            // Clean up stored button info for this touch
+                            _touchButtonMap.Remove(id);
                         }
                     }
                     else
-#endif
                     {
                         // Regular touch event
                         if (isInside)
@@ -506,6 +498,9 @@ namespace AppoMobi.Maui.Gestures
             {
                 long id = ((IntPtr)touch.Handle).ToInt64();
                 _parent.FireEvent(id, TouchActionType.Cancelled, touch);
+
+                // Clean up stored button info for this touch
+                _touchButtonMap.Remove(id);
             }
 
             UnlockTouch();
