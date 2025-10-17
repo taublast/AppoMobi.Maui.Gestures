@@ -155,18 +155,16 @@ namespace AppoMobi.Maui.Gestures
             {
                 _view.UserInteractionEnabled = true;
 
-                // Add hover tracking using UIHoverGestureRecognizer (WWDC 2020 best practice)
+                // Add hover tracking using UIHoverGestureRecognizer
                 var hoverGestureRecognizer = new UIHoverGestureRecognizer(HandleHover);
                 _view.AddGestureRecognizer(hoverGestureRecognizer);
 
-                // Add two-finger tap recognizer for right-click (WWDC 2020: context menus use button mask to recognize two-finger taps)
+                // Add two-finger tap recognizer for right-click if mouse attached only
                 _twoFingerTapRecognizer = new UITapGestureRecognizer(HandleTwoFingerTap)
                 {
                     ButtonMaskRequired = UIEventButtonMask.Secondary, Delegate = this
                 };
                 _view.AddGestureRecognizer(_twoFingerTapRecognizer);
-
-                Debug.WriteLine("✓ Added two-finger tap recognizer");
             }
 
             CheckLockPan();
