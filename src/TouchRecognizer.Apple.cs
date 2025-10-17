@@ -232,57 +232,27 @@ namespace AppoMobi.Maui.Gestures
 #if MACCATALYST
         #region Pointer Event Handling
 
-        private (MouseButton button, int buttonNumber)? GetPressedButtonFromEvent(UIEvent evt)
+        private (MouseButton button, int buttonNumber)? GetButtonFromEvent(UIEvent evt)
         {
-            // Detect which button was JUST PRESSED by comparing current state with previous
+            // Use UIEvent.ButtonMask (iOS 13.4+) for reliable button detection
+            // Reference: https://developer.apple.com/videos/play/wwdc2020/10094/
+
             if (evt == null)
                 return null;
 
-            var currentMask = evt.ButtonMask;
-            var newButtons = currentMask & ~(UIEventButtonMask)_currentPressedButtons;
+            // Check ButtonMask property - requires iOS 13.4+
+            var buttonMask = evt.ButtonMask;
 
-            // Check what button was just pressed
-            if ((newButtons & UIEventButtonMask.Primary) != 0)
+            // Primary button (left click)
+            if ((buttonMask & UIEventButtonMask.Primary) != 0)
                 return (MouseButton.Left, 1);
-            if ((newButtons & UIEventButtonMask.Secondary) != 0)
+
+            // Secondary button (right click)
+            if ((buttonMask & UIEventButtonMask.Secondary) != 0)
                 return (MouseButton.Right, 2);
 
-            // If no new button, check current state (fallback for first press)
-            if ((currentMask & UIEventButtonMask.Primary) != 0 && _currentPressedButtons == MouseButtons.None)
-                return (MouseButton.Left, 1);
-            if ((currentMask & UIEventButtonMask.Secondary) != 0 && _currentPressedButtons == MouseButtons.None)
-                return (MouseButton.Right, 2);
-
-            return null;
-        }
-
-        private (MouseButton button, int buttonNumber)? GetReleasedButtonFromEvent(UIEvent evt)
-        {
-            // Detect which button was JUST RELEASED by comparing current state with previous
-            if (evt == null)
-                return null;
-
-            var currentMask = evt.ButtonMask;
-            var currentButtons = GetCurrentPressedButtons(evt);
-            var releasedButtons = _currentPressedButtons & ~currentButtons;
-
-            // Check what button was just released
-            if ((releasedButtons & MouseButtons.Left) != 0)
-                return (MouseButton.Left, 1);
-            if ((releasedButtons & MouseButtons.Right) != 0)
-                return (MouseButton.Right, 2);
-
-            // If _currentPressedButtons shows something but currentButtons is None, a button was released
-            if (_currentPressedButtons != MouseButtons.None && currentButtons == MouseButtons.None)
-            {
-                // Return whatever was last pressed
-                if ((_currentPressedButtons & MouseButtons.Left) != 0)
-                    return (MouseButton.Left, 1);
-                if ((_currentPressedButtons & MouseButtons.Right) != 0)
-                    return (MouseButton.Right, 2);
-            }
-
-            return null;
+            // Default to left if no button mask (shouldn't happen)
+            return (MouseButton.Left, 1);
         }
 
         private PointerDeviceType GetPointerDeviceType(UITouch touch)
@@ -363,12 +333,11 @@ namespace AppoMobi.Maui.Gestures
                 {
                     var deviceType = GetPointerDeviceType(touch);
                     var point = GetPointFromTouch(touch);
-                    var buttonInfo = GetPressedButtonFromEvent(evt);
+                    var buttonInfo = GetButtonFromEvent(evt);
                     var pressedButtons = GetCurrentPressedButtons(evt);
 
                     if (buttonInfo.HasValue)
                     {
-                        // Update tracked button state
                         _currentPressedButtons = pressedButtons;
 
                         // Get pressure for Apple Pencil
@@ -384,13 +353,6 @@ namespace AppoMobi.Maui.Gestures
 
                         _parent.FireEventWithMouse(id, eventType, point, buttonInfo.Value.button,
                             buttonInfo.Value.buttonNumber, buttonState, pressedButtons, deviceType, pressure);
-
-                        Debug.WriteLine($"[macCatalyst] Button PRESSED: {buttonInfo.Value.button} ({buttonInfo.Value.buttonNumber})");
-                    }
-                    else
-                    {
-                        // No button info but it's a pointer event - treat as touch
-                        _parent.FireEvent(id, TouchActionType.Pressed, touch);
                     }
                 }
                 else
