@@ -5,7 +5,8 @@
       "Bash(dotnet build:*)",
       "Bash(git log:*)",
       "WebSearch",
-      "WebFetch(domain:stackoverflow.com)"
+      "WebFetch(domain:stackoverflow.com)",
+      "WebFetch(domain:www.reddit.com)"
     ],
     "deny": [],
     "ask": []

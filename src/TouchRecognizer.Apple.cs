@@ -8,14 +8,14 @@ namespace AppoMobi.Maui.Gestures
 {
     class TouchRecognizer : UIGestureRecognizer, IUIGestureRecognizerDelegate
     {
-
         volatile PlatformTouchEffect _parent;
         UIView _view;
 
         private bool _disposed;
 
         // Store button info per touch ID (iOS 13.4+)
-        private Dictionary<long, (MouseButton button, int buttonNumber)> _touchButtonMap = new Dictionary<long, (MouseButton, int)>();
+        private Dictionary<long, (MouseButton button, int buttonNumber)> _touchButtonMap =
+            new Dictionary<long, (MouseButton, int)>();
 
         public TouchRecognizer(UIView view, PlatformTouchEffect parent)
         {
@@ -32,12 +32,12 @@ namespace AppoMobi.Maui.Gestures
 
             this.CancelsTouchesInView = false;
 
-            if (_parent.FormsEffect.TouchMode == TouchHandlingStyle.Lock || _parent.FormsEffect.TouchMode == TouchHandlingStyle.Manual)
+            if (_parent.FormsEffect.TouchMode == TouchHandlingStyle.Lock ||
+                _parent.FormsEffect.TouchMode == TouchHandlingStyle.Manual)
             {
                 AttachPanning();
             }
-            else
-                if (_childPanGestureRecognizer != null)
+            else if (_childPanGestureRecognizer != null)
             {
                 DetachPanning();
             }
@@ -66,9 +66,7 @@ namespace AppoMobi.Maui.Gestures
 
             _childPanGestureRecognizer = new UIPanGestureRecognizer(HandlePan)
             {
-                CancelsTouchesInView = false,  
-                Delegate = this,
-                AllowedScrollTypesMask = UIScrollTypeMask.All
+                CancelsTouchesInView = false, Delegate = this, AllowedScrollTypesMask = UIScrollTypeMask.All
             };
             _view.AddGestureRecognizer(_childPanGestureRecognizer);
         }
@@ -93,13 +91,43 @@ namespace AppoMobi.Maui.Gestures
         /// <param name="gesture">The UIPanGestureRecognizer triggering the action.</param>
         private void HandlePan(UIPanGestureRecognizer gesture)
         {
-            // Check if this is a scroll event (two-finger trackpad scroll)
-            // This will be handled through ShouldReceiveEvent delegate
+            if (gesture.State == UIGestureRecognizerState.Began && _parent != null)
+            {
+                Debug.WriteLine("PAN BEGAN !!!");
+            }
 
-            // Do nothing for regular pan - just being active blocks parent when needed
-            // SoftLock mode dynamically fails this gesture in TouchesMoved when not handled
+            // Handle two-finger trackpad scroll (AllowedScrollTypesMask allows this)
+            if (gesture.State == UIGestureRecognizerState.Changed && _parent != null)
+            {
+                // Get the translation - this is the scroll delta for two-finger scroll
+                var translation = gesture.TranslationInView(_view);
+                var location = gesture.LocationInView(_view);
+
+                // Convert to pixel coordinates
+                var point = new PointF(
+                    (float)(location.X * TouchEffect.Density),
+                    (float)(location.Y * TouchEffect.Density)
+                );
+
+                var delta = new PointF(
+                    (float)(translation.X * TouchEffect.Density),
+                    (float)(translation.Y * TouchEffect.Density)
+                );
+
+                // Only fire if there's actual movement
+                if (delta.X != 0 || delta.Y != 0)
+                {
+                    Debug.WriteLine(
+                        $"[Pan/Scroll] Delta: ({delta.X:F2}, {delta.Y:F2}) at ({point.X:F0}, {point.Y:F0})");
+
+                    // Fire wheel event for scroll
+                    _parent.FireEventWheel(0, point, delta);
+
+                    // Reset translation for next event
+                    gesture.SetTranslation(CGPoint.Empty, _view);
+                }
+            }
         }
-
 
         #endregion
 
@@ -109,7 +137,8 @@ namespace AppoMobi.Maui.Gestures
             {
                 _view?.RemoveGestureRecognizer(this);
 
-                DetachPanning(); ;
+                DetachPanning();
+                ;
             }
             catch (Exception e)
             {
@@ -130,6 +159,15 @@ namespace AppoMobi.Maui.Gestures
                 // Add hover tracking using UIHoverGestureRecognizer (WWDC 2020 best practice)
                 var hoverGestureRecognizer = new UIHoverGestureRecognizer(HandleHover);
                 _view.AddGestureRecognizer(hoverGestureRecognizer);
+
+                // Add two-finger tap recognizer for right-click (WWDC 2020: context menus use button mask to recognize two-finger taps)
+                var twoFingerTapRecognizer = new UITapGestureRecognizer(HandleTwoFingerTap)
+                {
+                    NumberOfTouchesRequired = 2, Delegate = this
+                };
+                _view.AddGestureRecognizer(twoFingerTapRecognizer);
+
+                Debug.WriteLine("✓ Added two-finger tap recognizer");
             }
 
             CheckLockPan();
@@ -195,7 +233,7 @@ namespace AppoMobi.Maui.Gestures
         {
             // For SoftLock: recognize simultaneously and require us to fail to pass gesture to parent
             ShouldBeRequiredToFailBy = SetFalse;
-            ShouldRecognizeSimultaneously = SetTrueCapture;  
+            ShouldRecognizeSimultaneously = SetTrueCapture;
         }
 
         void LockTouch()
@@ -207,6 +245,21 @@ namespace AppoMobi.Maui.Gestures
         private bool ShouldEvent(UIGestureRecognizer gesturerecognizer, UIEvent @event)
         {
             return true;
+        }
+
+        // Implement ShouldReceiveTouch from IUIGestureRecognizerDelegate
+        [Export("gestureRecognizer:shouldReceiveTouch:")]
+        public bool ShouldReceiveTouch(UIGestureRecognizer recognizer, UITouch touch)
+        {
+            // For the child pan recognizer (scroll handler), reject direct touches
+            // Only accept trackpad/mouse scroll events (which don't come through as touches)
+            if (recognizer == _childPanGestureRecognizer)
+            {
+                Debug.WriteLine($"[ShouldReceiveTouch] Pan recognizer rejecting touch type: {touch.Type}");
+                return false; // Disallow touches, only allow trackpad/mouse scroll
+            }
+
+            return true; // Allow touches for other recognizers
         }
 
         void UnlockTouch()
@@ -226,6 +279,7 @@ namespace AppoMobi.Maui.Gestures
             {
                 return false;
             }
+
             return view.Hidden || view.Alpha == 0 || IsViewOrAncestorHidden(view.Superview);
         }
 
@@ -273,7 +327,8 @@ namespace AppoMobi.Maui.Gestures
         private PointF GetPointFromTouch(UITouch touch)
         {
             var locationInView = touch.LocationInView(_view);
-            return new PointF((float)(locationInView.X * TouchEffect.Density), (float)(locationInView.Y * TouchEffect.Density));
+            return new PointF((float)(locationInView.X * TouchEffect.Density),
+                (float)(locationInView.Y * TouchEffect.Density));
         }
 
         private bool IsPointerEvent(UITouch touch)
@@ -301,11 +356,37 @@ namespace AppoMobi.Maui.Gestures
                 return;
 
             var location = recognizer.LocationInView(_view);
-            var point = new PointF((float)(location.X * TouchEffect.Density), (float)(location.Y * TouchEffect.Density));
+            var point = new PointF((float)(location.X * TouchEffect.Density),
+                (float)(location.Y * TouchEffect.Density));
 
             // Fire hover event (no button pressed during hover)
             // Using PointerDeviceType.Mouse as default - Apple Pencil hover would need iOS 16.1+ UIPointerInteraction
             _parent.FireEventPointerWithMouse(0, point, PointerDeviceType.Mouse, 1.0f);
+        }
+
+        private void HandleTwoFingerTap(UITapGestureRecognizer recognizer)
+        {
+            if (_parent == null || IsViewOrAncestorHidden(this.View))
+                return;
+
+            if (recognizer.State == UIGestureRecognizerState.Ended)
+            {
+                var location = recognizer.LocationInView(_view);
+                var point = new PointF((float)(location.X * TouchEffect.Density),
+                    (float)(location.Y * TouchEffect.Density));
+
+                Debug.WriteLine($"[TwoFingerTap] Detected at ({point.X:F0}, {point.Y:F0})");
+
+                // Fire right-click event (two-finger tap = secondary button according to WWDC 2020)
+                // Fire both pressed and released for a complete click
+                _parent.FireEventWithMouse(0, TouchActionType.Pointer, point,
+                    MouseButton.Right, 2, MouseButtonState.Pressed, MouseButtons.Right,
+                    PointerDeviceType.Mouse, 1.0f);
+
+                _parent.FireEventWithMouse(0, TouchActionType.Pointer, point,
+                    MouseButton.Right, 2, MouseButtonState.Released, MouseButtons.None,
+                    PointerDeviceType.Mouse, 1.0f);
+            }
         }
 
         #endregion
@@ -324,7 +405,8 @@ namespace AppoMobi.Maui.Gestures
             _parent.CountFingers = (int)NumberOfTouches;
 
             // Debug logging to see what events we're receiving
-            Debug.WriteLine($"[TouchesBegan] Type:{evt.Type} Touches:{touches.Count} NumberOfTouches:{NumberOfTouches} ButtonMask:{evt.ButtonMask}");
+            Debug.WriteLine(
+                $"[TouchesBegan] Type:{evt.Type} Touches:{touches.Count} NumberOfTouches:{NumberOfTouches} ButtonMask:{evt.ButtonMask}");
 
             foreach (UITouch touch in touches.Cast<UITouch>())
             {
@@ -396,7 +478,8 @@ namespace AppoMobi.Maui.Gestures
                     var pressure = touch.Type == UITouchType.Stylus ? (float)touch.Force : 1.0f;
 
                     // Fire move event with current button state
-                    _parent.FireEventWithMouseMove(id, TouchActionType.Moved, point, pressedButtons, deviceType, pressure);
+                    _parent.FireEventWithMouseMove(id, TouchActionType.Moved, point, pressedButtons, deviceType,
+                        pressure);
                 }
                 else
                 {
@@ -543,12 +626,10 @@ namespace AppoMobi.Maui.Gestures
         }
 
 
-
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
             _disposed = true;
         }
-
     }
 }
