@@ -20,6 +20,19 @@ namespace AppoMobi.Maui.Gestures
 
         }
 
+        /// <summary>
+        /// Gets the TouchEffect instance from a view's Effects collection
+        /// </summary>
+        /// <param name="view">The view to get the effect from</param>
+        /// <returns>The TouchEffect instance, or null if not found</returns>
+        public static TouchEffect GetFrom(View view)
+        {
+            if (view == null)
+                return null;
+
+            return view.Effects.FirstOrDefault(e => e is TouchEffect) as TouchEffect;
+        }
+
         public class WheelEventArgs : EventArgs
         {
             public float Delta { get; set; }
@@ -987,13 +1000,8 @@ namespace AppoMobi.Maui.Gestures
                     }
 
                     #region Send raw touch event
-                    //if (listener != null)
-                    //{
-                    //    SendAction(listener, action, args, TouchActionResult.Touch);
-                    //}
-
-                    //TouchAction?.Invoke(element, args);
-
+                    // Always fire TouchAction for ALL event types so subscribers can see everything
+                    TouchAction?.Invoke(element, args);
                     #endregion
 
                     _lastArgs = args;

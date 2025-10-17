@@ -168,6 +168,7 @@ namespace AppoMobi.Maui.Gestures
                     else
                     {
                         // Secondary buttons (Right, Middle, XButton1, etc.) - use Pointer
+                        //System.Diagnostics.Debug.WriteLine($"[Windows] Right/Secondary button detected: {buttonInfo.Value.button} (#{buttonInfo.Value.buttonNumber})");
                         FireEventWithMouse(sender, TouchActionType.Pointer, args, buttonInfo.Value.button,
                             buttonInfo.Value.buttonNumber, MouseButtonState.Pressed, deviceType);
                     }
@@ -266,6 +267,7 @@ namespace AppoMobi.Maui.Gestures
                         else
                         {
                             // Secondary buttons (Right, Middle, XButton1, etc.) - use Pointer
+                            //System.Diagnostics.Debug.WriteLine($"[Windows] Right/Secondary button RELEASED: {buttonInfo.Value.button} (#{buttonInfo.Value.buttonNumber})");
                             FireEventWithMouse(sender, TouchActionType.Pointer, args, buttonInfo.Value.button,
                                 buttonInfo.Value.buttonNumber, MouseButtonState.Released, deviceType);
                         }
