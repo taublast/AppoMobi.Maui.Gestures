@@ -67,7 +67,7 @@ namespace AppoMobi.Maui.Gestures
             {
                 CancelsTouchesInView = false,  
                 Delegate = this,
-                AllowedScrollTypesMask = UIScrollTypeMask.All
+                AllowedScrollTypesMask = UIScrollTypeMask.Continuous
             };
             _view.AddGestureRecognizer(_childPanGestureRecognizer);
         }
