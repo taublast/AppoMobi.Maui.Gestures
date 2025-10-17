@@ -21,6 +21,7 @@
                      BackgroundColor="LightBlue"
                      StrokeThickness="3"
                      Stroke="DarkBlue"
+                     touch:TouchEffect.ShareTouch="Lock"
                      touch:TouchEffect.ForceAttach="True">
 
             <gesturesTester:TouchBorder.StrokeShape>

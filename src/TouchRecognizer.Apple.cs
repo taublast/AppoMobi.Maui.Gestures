@@ -67,7 +67,7 @@ namespace AppoMobi.Maui.Gestures
             {
                 CancelsTouchesInView = false,  
                 Delegate = this,
-                AllowedScrollTypesMask = UIScrollTypeMask.Continuous
+                AllowedScrollTypesMask = UIScrollTypeMask.All
             };
             _view.AddGestureRecognizer(_childPanGestureRecognizer);
         }
@@ -87,11 +87,15 @@ namespace AppoMobi.Maui.Gestures
         /// Handles the pan gesture action.
         /// For Lock mode: just blocks parent scrollviews by existing.
         /// For SoftLock mode: controlled dynamically via State in TouchesMoved.
+        /// Also handles scroll events (two-finger scroll on trackpad).
         /// </summary>
         /// <param name="gesture">The UIPanGestureRecognizer triggering the action.</param>
         private void HandlePan(UIPanGestureRecognizer gesture)
         {
-            // Do nothing - just being active blocks parent when needed
+            // Check if this is a scroll event (two-finger trackpad scroll)
+            // This will be handled through ShouldReceiveEvent delegate
+
+            // Do nothing for regular pan - just being active blocks parent when needed
             // SoftLock mode dynamically fails this gesture in TouchesMoved when not handled
         }
 
@@ -201,7 +205,44 @@ namespace AppoMobi.Maui.Gestures
 
         private bool ShouldEvent(UIGestureRecognizer gesturerecognizer, UIEvent @event)
         {
+            // Allow scroll events to be processed by HandlePan
+            if (@event.Type == UIEventType.Scroll)
+            {
+                HandleScrollEvent(gesturerecognizer, @event);
+                return true; // Allow the gesture to proceed
+            }
             return true;
+        }
+
+        private void HandleScrollEvent(UIGestureRecognizer gestureRecognizer, UIEvent evt)
+        {
+            // Two-finger scroll events come through here
+            // Get the scroll delta from the pan gesture recognizer
+            if (gestureRecognizer is UIPanGestureRecognizer panGesture && _parent != null)
+            {
+                // Get translation in view coordinates
+                var translation = panGesture.TranslationInView(_view);
+                var location = panGesture.LocationInView(_view);
+
+                // Convert to pixel coordinates
+                var point = new PointF(
+                    (float)(location.X * TouchEffect.Density),
+                    (float)(location.Y * TouchEffect.Density)
+                );
+
+                var delta = new PointF(
+                    (float)(translation.X * TouchEffect.Density),
+                    (float)(translation.Y * TouchEffect.Density)
+                );
+
+                // Fire wheel event for scroll
+                _parent.FireEventWheel(0, point, delta);
+
+                // Reset translation for next event
+                panGesture.SetTranslation(CGPoint.Empty, _view);
+
+                Debug.WriteLine($"[Scroll] Delta: ({delta.X:F2}, {delta.Y:F2}) at ({point.X:F0}, {point.Y:F0})");
+            }
         }
 
         void UnlockTouch()
@@ -321,6 +362,13 @@ namespace AppoMobi.Maui.Gestures
             foreach (UITouch touch in touches.Cast<UITouch>())
             {
                 long id = ((IntPtr)touch.Handle).ToInt64();
+
+                // Scroll events are handled via ShouldReceiveEvent delegate, not here
+                if (evt.Type == UIEventType.Scroll)
+                {
+                    // Skip - scroll events don't have button presses and are handled elsewhere
+                    continue;
+                }
 
                 // Check if this is a pointer event (mouse/pen) on iOS 13.4+
                 if (IsPointerEvent(touch))
