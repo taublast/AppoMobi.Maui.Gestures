@@ -22,7 +22,7 @@ namespace AppoMobi.Maui.Gestures
         {
             try
             {
-                var args = new TouchActionEventArgs(id, actionType, point, null);
+                var args = TouchArgsPool.Rent(id, actionType, point, null);
                 args.Wheel = Wheel;
                 args.NumberOfTouches = CountFingers;
                 args.IsInsideView = isInsideView;
@@ -58,24 +58,25 @@ namespace AppoMobi.Maui.Gestures
 
 #if MACCATALYST
         public void FireEventWithMouse(long id, TouchActionType actionType, PointF point,
-            MouseButton button, int buttonNumber, MouseButtonState buttonState, PointerDeviceType deviceType)
+            MouseButton button, int buttonNumber, MouseButtonState buttonState, MouseButtons pressedButtons,
+            PointerDeviceType deviceType, float pressure)
         {
             try
             {
-                var args = new TouchActionEventArgs(id, actionType, point, null);
+                var args = TouchArgsPool.Rent(id, actionType, point, null);
                 args.Wheel = Wheel;
                 args.NumberOfTouches = CountFingers;
                 args.IsInsideView = isInsideView;
 
-                // Set mouse-specific data
+                // Set pointer data with all button information
                 args.Pointer = new TouchEffect.PointerData
                 {
                     Button = button,
                     ButtonNumber = buttonNumber,
                     State = buttonState,
-                    PressedButtons = _currentPressedButtons,
+                    PressedButtons = pressedButtons,
                     DeviceType = deviceType,
-                    Pressure = 1.0f // macCatalyst mouse always has full pressure
+                    Pressure = pressure
                 };
 
                 FormsEffect?.OnTouchAction(args);
@@ -86,24 +87,25 @@ namespace AppoMobi.Maui.Gestures
             }
         }
 
-        public void FireEventWithMouseMove(long id, TouchActionType actionType, PointF point, PointerDeviceType deviceType)
+        public void FireEventWithMouseMove(long id, TouchActionType actionType, PointF point,
+            MouseButtons pressedButtons, PointerDeviceType deviceType, float pressure)
         {
             try
             {
-                var args = new TouchActionEventArgs(id, actionType, point, null);
+                var args = TouchArgsPool.Rent(id, actionType, point, null);
                 args.Wheel = Wheel;
                 args.NumberOfTouches = CountFingers;
                 args.IsInsideView = isInsideView;
 
-                // Set mouse-specific data for move events
+                // Set pointer data for move events with current button state
                 args.Pointer = new TouchEffect.PointerData
                 {
-                    Button = MouseButton.Left, // Not relevant for move events
-                    ButtonNumber = 0, // Not relevant for move events
-                    State = MouseButtonState.Pressed, // Not relevant for move events
-                    PressedButtons = _currentPressedButtons,
+                    Button = MouseButton.Left, // Not used for move events
+                    ButtonNumber = 0, // Not used for move events
+                    State = MouseButtonState.Pressed, // Not used for move events
+                    PressedButtons = pressedButtons,
                     DeviceType = deviceType,
-                    Pressure = 1.0f
+                    Pressure = pressure
                 };
 
                 FormsEffect?.OnTouchAction(args);
@@ -123,7 +125,7 @@ namespace AppoMobi.Maui.Gestures
         {
             try
             {
-                var args = new TouchActionEventArgs(id, TouchActionType.Pointer, point, null);
+                var args = TouchArgsPool.Rent(id, TouchActionType.Pointer, point, null);
                 args.Wheel = Wheel;
                 args.NumberOfTouches = 0; // No touches, just pointer
                 args.IsInsideView = true; // Always inside when hovering
@@ -147,56 +149,18 @@ namespace AppoMobi.Maui.Gestures
             }
         }
 
-        public void FireEventWithTrackpadPan(long id, TouchActionType actionType, PointF point, PointF distance)
-        {
-            try
-            {
-                var args = new TouchActionEventArgs(id, actionType, point, null);
-                args.Wheel = Wheel;
-                args.NumberOfTouches = 0; // No actual touches for trackpad
-                args.IsInsideView = isInsideView;
-                args.Distance = new TouchActionEventArgs.DistanceInfo
-                {
-                    Delta = distance,
-                    Total = distance,
-                    Start = point,
-                    End = point.Add(distance)
-                };
-
-                // Set trackpad-specific pointer data
-                args.Pointer = new TouchEffect.PointerData
-                {
-                    Button = MouseButton.Left, // Not relevant for trackpad
-                    ButtonNumber = 0, // Not relevant for trackpad
-                    State = MouseButtonState.Released, // Not relevant for trackpad
-                    PressedButtons = MouseButtons.None, // No buttons for trackpad scroll
-                    DeviceType = PointerDeviceType.Mouse, // Trackpad is mouse-like
-                    Pressure = 1.0f
-                };
-
-                FormsEffect?.OnTouchAction(args);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-            }
-        }
-
         public void FireEventWheel(long id, PointF point, PointF wheelDelta)
         {
             try
             {
-                var args = new TouchActionEventArgs(id, TouchActionType.Wheel, point, null);
+                var args = TouchArgsPool.Rent(id, TouchActionType.Wheel, point, null);
                 args.Wheel = Wheel;
                 args.NumberOfTouches = 0;
                 args.IsInsideView = isInsideView;
-                args.Distance = new TouchActionEventArgs.DistanceInfo
-                {
-                    Delta = wheelDelta,
-                    Total = wheelDelta,
-                    Start = point,
-                    End = point.Add(wheelDelta)
-                };
+                args.Distance.Delta = wheelDelta;
+                args.Distance.Total = wheelDelta;
+                args.Distance.Start = point;
+                args.Distance.End = point.Add(wheelDelta);
 
                 // Set wheel-specific pointer data
                 args.Pointer = new TouchEffect.PointerData

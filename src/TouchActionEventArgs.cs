@@ -50,6 +50,7 @@
 
         public static PointF GetVelocity(TouchActionEventArgs current, TouchActionEventArgs previous)
         {
+            const float VelocityEpsilon = 0.001f; // Minimum velocity to avoid division issues
             var velocity = new PointF(0, 0);
 
             if (previous != null)
@@ -60,11 +61,15 @@
                 if (current.Distance.Delta.X == 0 && current.Distance.Delta.Y == 0 && (current.Type == TouchActionType.Released
                         || current.Type == TouchActionType.Cancelled || current.Type == TouchActionType.Exited))
                 {
-                    // maybe finger released
-                    var prevDeltaSecondsX = previous.Distance.Velocity.X != 0 ? previous.Distance.Delta.X / previous.Distance.Velocity.X : 0;
-                    var prevDeltaSecondsY = previous.Distance.Velocity.Y != 0 ? previous.Distance.Delta.Y / previous.Distance.Velocity.Y : 0;
+                    // Finger released - calculate velocity from previous movement
+                    var prevDeltaSecondsX = Math.Abs(previous.Distance.Velocity.X) > VelocityEpsilon
+                        ? previous.Distance.Delta.X / previous.Distance.Velocity.X : 0;
+                    var prevDeltaSecondsY = Math.Abs(previous.Distance.Velocity.Y) > VelocityEpsilon
+                        ? previous.Distance.Delta.Y / previous.Distance.Velocity.Y : 0;
 
-                    var prevDeltaSeconds = !double.IsNaN(prevDeltaSecondsX) ? prevDeltaSecondsX : prevDeltaSecondsY;
+                    var prevDeltaSeconds = !float.IsNaN(prevDeltaSecondsX) && !float.IsInfinity(prevDeltaSecondsX)
+                        ? prevDeltaSecondsX
+                        : prevDeltaSecondsY;
 
                     deltaDistance = new(previous.Distance.Delta.X, previous.Distance.Delta.Y);
                     deltaSeconds = (float)((current.Timestamp - previous.Timestamp).TotalSeconds + prevDeltaSeconds);
@@ -82,6 +87,12 @@
                         velocity = new PointF(deltaDistance.X / deltaSeconds, deltaDistance.Y / deltaSeconds);
                     }
                 }
+
+                // Validate final velocity - ensure no NaN or Infinity
+                if (float.IsNaN(velocity.X) || float.IsInfinity(velocity.X))
+                    velocity.X = 0;
+                if (float.IsNaN(velocity.Y) || float.IsInfinity(velocity.Y))
+                    velocity.Y = 0;
             }
 
             //Trace.WriteLine(previous != null ? $"[G] {velocity.Y} {previous.Type}" : $"[G] {velocity.Y} NULL");
@@ -115,6 +126,53 @@
             Distance = new DistanceInfo();
         }
 
+        /// <summary>
+        /// Resets this instance for reuse from the object pool.
+        /// This is called by TouchArgsPool.Rent() to initialize a pooled object.
+        /// DO NOT call this method directly - use TouchArgsPool.Rent() instead.
+        /// </summary>
+        internal void Reset(long id, TouchActionType type, PointF location, object context)
+        {
+            Id = id;
+            Type = type;
+            Location = location;
+            Context = context;
+            Timestamp = DateTime.Now;
+
+            // Reuse existing DistanceInfo instead of allocating new
+            Distance.Delta = PointF.Zero;
+            Distance.Total = PointF.Zero;
+            Distance.Start = PointF.Zero;
+            Distance.End = PointF.Zero;
+            Distance.Velocity = PointF.Zero;
+            Distance.TotalVelocity = PointF.Zero;
+
+            // Clear other fields
+            PreventDefault = false;
+            StartingLocation = PointF.Zero;
+            IsInContact = false;
+            IsInsideView = false;
+            Handled = false;
+            NumberOfTouches = 0;
+            DeltaTimeMs = 0;
+            Wheel = null;
+            Pointer = null;
+            Manipulation = null;
+        }
+
+        /// <summary>
+        /// Clears all references to prevent memory leaks when object sits in pool.
+        /// This is called by TouchArgsPool.Return() before returning object to pool.
+        /// DO NOT call this method directly - use TouchArgsPool.Return() instead.
+        /// </summary>
+        internal void Clear()
+        {
+            // Clear references to prevent memory leaks when object sits in pool
+            Context = null;
+            Wheel = null;
+            Pointer = null;
+            Manipulation = null;
+        }
 
         public long Id { private set; get; }
 
@@ -199,9 +257,10 @@
 
         /// <summary>
         /// In pixels inside parent view,
-        /// 0,0 is top-left corner of the view
+        /// 0,0 is top-left corner of the view.
+        /// Changed from record to class to enable object pooling and reduce allocations.
         /// </summary>
-        public record DistanceInfo
+        public class DistanceInfo
         {
             public DistanceInfo()
             {
@@ -209,66 +268,43 @@
                 Total = PointF.Zero;
                 Start = PointF.Zero;
                 End = PointF.Zero;
+                Velocity = PointF.Zero;
+                TotalVelocity = PointF.Zero;
             }
 
             /// <summary>
             /// In pixels inside parent view,
             /// 0,0 is top-left corner of the view
             /// </summary>
-            public PointF Delta
-            {
-                get;
-                set;
-            }
+            public PointF Delta { get; set; }
 
             /// <summary>
             /// In pixels inside parent view,
             /// 0,0 is top-left corner of the view
             /// </summary>
-            public virtual PointF Total
-            {
-                get;
-                set;
-            }
+            public PointF Total { get; set; }
 
             /// <summary>
             /// Pixels per second
             /// </summary>
-            public virtual PointF TotalVelocity
-            {
-                get;
-                set;
-            }
+            public PointF TotalVelocity { get; set; }
 
             /// <summary>
             /// Pixels per second
             /// </summary>
-            public PointF Velocity
-            {
-                get;
-                set;
-            }
+            public PointF Velocity { get; set; }
 
             /// <summary>
             /// In pixels inside parent view,
             /// 0,0 is top-left corner of the view
             /// </summary>
-            public PointF Start
-            {
-                get;
-                set;
-            }
+            public PointF Start { get; set; }
 
             /// <summary>
             /// In pixels inside parent view,
             /// 0,0 is top-left corner of the view
             /// </summary>
-            public PointF End
-            {
-                get;
-                set;
-            }
-
+            public PointF End { get; set; }
         }
 
     }

@@ -75,7 +75,7 @@ namespace AppoMobi.Maui.Gestures
         {
             try
             {
-                var args = new TouchActionEventArgs(id, actionType, pointerLocation, null);//Element.BindingContext
+                var args = TouchArgsPool.Rent(id, actionType, pointerLocation, null);
 
                 args.Wheel = Wheel;
                 args.NumberOfTouches = CountFingers;
@@ -96,7 +96,7 @@ namespace AppoMobi.Maui.Gestures
         {
             try
             {
-                var args = new TouchActionEventArgs(id, actionType, pointerLocation, null);
+                var args = TouchArgsPool.Rent(id, actionType, pointerLocation, null);
                 args.Wheel = Wheel;
                 args.NumberOfTouches = CountFingers;
                 args.IsInsideView = isInsideView;
@@ -126,7 +126,7 @@ namespace AppoMobi.Maui.Gestures
         {
             try
             {
-                var args = new TouchActionEventArgs(id, TouchActionType.Pointer, pointerLocation, null);
+                var args = TouchArgsPool.Rent(id, TouchActionType.Pointer, pointerLocation, null);
                 args.Wheel = Wheel;
                 args.NumberOfTouches = CountFingers;
                 args.IsInsideView = isInsideView;
@@ -154,17 +154,14 @@ namespace AppoMobi.Maui.Gestures
         {
             try
             {
-                var args = new TouchActionEventArgs(id, TouchActionType.Wheel, pointerLocation, null);
+                var args = TouchArgsPool.Rent(id, TouchActionType.Wheel, pointerLocation, null);
                 args.Wheel = Wheel;
                 args.NumberOfTouches = CountFingers;
                 args.IsInsideView = isInsideView;
-                args.Distance = new TouchActionEventArgs.DistanceInfo
-                {
-                    Delta = wheelDelta,
-                    Total = wheelDelta,
-                    Start = pointerLocation,
-                    End = pointerLocation.Add(wheelDelta)
-                };
+                args.Distance.Delta = wheelDelta;
+                args.Distance.Total = wheelDelta;
+                args.Distance.Start = pointerLocation;
+                args.Distance.End = pointerLocation.Add(wheelDelta);
 
                 // Set wheel-specific pointer data
                 args.Pointer = new TouchEffect.PointerData

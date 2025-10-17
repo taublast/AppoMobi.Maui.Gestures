@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:touch="clr-namespace:AppoMobi.Maui.Gestures;assembly=AppoMobi.Maui.Gestures"
+             x:Class="GesturesTester.MainPage"
+             Title="Gesture Tester">
+
+    <Grid RowDefinitions="Auto,*,200" Padding="10">
+
+        <!-- Title -->
+        <Label Grid.Row="0"
+               Text="macCatalyst Pointer Gesture Tester"
+               FontSize="24"
+               FontAttributes="Bold"
+               HorizontalOptions="Center"
+               Margin="0,0,0,10"/>
+
+        <!-- Main Test Area -->
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Spacing="15">
+
+                <!-- Test Area 1: Canvas for Pointer Tracking -->
+                <Frame BorderColor="DarkGray" HasShadow="True" Padding="0">
+                    <Grid RowDefinitions="Auto,300">
+                        <Label Grid.Row="0"
+                               Text="Pointer Tracking Canvas"
+                               FontSize="16"
+                               FontAttributes="Bold"
+                               Padding="10,5"
+                               BackgroundColor="#F0F0F0"/>
+
+                        <Border Grid.Row="1"
+                                x:Name="Canvas"
+                                BackgroundColor="LightYellow"
+                                StrokeThickness="2"
+                                Stroke="Gray"
+                                touch:TouchEffect.ForceAttach="True">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="5"/>
+                            </Border.StrokeShape>
+
+                            <Grid>
+                                <Label x:Name="CanvasLabel"
+                                       Text="Move pointer here&#10;Try left click, right click, hover&#10;Use trackpad for scrolling"
+                                       HorizontalOptions="Center"
+                                       VerticalOptions="Center"
+                                       TextColor="Gray"
+                                       FontSize="14"
+                                       HorizontalTextAlignment="Center"/>
+
+                                <!-- Visual indicator for pointer position -->
+                                <Ellipse x:Name="PointerIndicator"
+                                         Fill="Red"
+                                         WidthRequest="20"
+                                         HeightRequest="20"
+                                         IsVisible="False"
+                                         HorizontalOptions="Start"
+                                         VerticalOptions="Start"/>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Frame>
+
+                <!-- Test Area 2: Interactive Buttons -->
+                <Frame BorderColor="DarkGray" HasShadow="True" Padding="10">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Interactive Button Tests"
+                               FontSize="16"
+                               FontAttributes="Bold"/>
+
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                            <!-- Left Click Test -->
+                            <Button Grid.Column="0"
+                                    x:Name="LeftClickBtn"
+                                    Text="Left Click Me"
+                                    BackgroundColor="LightBlue"
+                                    touch:TouchEffect.ForceAttach="True"/>
+
+                            <!-- Right Click Test -->
+                            <Button Grid.Column="1"
+                                    x:Name="RightClickBtn"
+                                    Text="Right Click Me"
+                                    BackgroundColor="LightCoral"
+                                    touch:TouchEffect.ForceAttach="True"/>
+                        </Grid>
+
+                        <Label x:Name="ButtonFeedback"
+                               Text="Click a button to test..."
+                               FontSize="12"
+                               TextColor="Gray"
+                               HorizontalTextAlignment="Center"/>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Test Area 3: Multi-Touch Test -->
+                <Frame BorderColor="DarkGray" HasShadow="True" Padding="10">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Multi-Touch Test (Pinch/Zoom)"
+                               FontSize="16"
+                               FontAttributes="Bold"/>
+
+                        <Border x:Name="MultiTouchArea"
+                                BackgroundColor="LightGreen"
+                                StrokeThickness="2"
+                                Stroke="DarkGreen"
+                                HeightRequest="150"
+                                touch:TouchEffect.ForceAttach="True">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="5"/>
+                            </Border.StrokeShape>
+
+                            <Label x:Name="MultiTouchLabel"
+                                   Text="Pinch with two fingers&#10;or use trackpad gestures"
+                                   HorizontalOptions="Center"
+                                   VerticalOptions="Center"
+                                   TextColor="DarkGreen"
+                                   HorizontalTextAlignment="Center"/>
+                        </Border>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Test Area 4: ScrollView Manual Mode Test -->
+                <Frame BorderColor="DarkGray" HasShadow="True" Padding="10">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Manual Mode Test (Nested in ScrollView)"
+                               FontSize="16"
+                               FontAttributes="Bold"/>
+
+                        <Label Text="This entire page is in a ScrollView. The slider below uses Manual mode:"
+                               FontSize="12"
+                               TextColor="Gray"/>
+
+                        <Slider x:Name="TestSlider"
+                                Minimum="0"
+                                Maximum="100"
+                                Value="50"
+                                touch:TouchEffect.ForceAttach="True"
+                                touch:TouchEffect.ShareTouch="Manual"/>
+
+                        <Label x:Name="SliderValueLabel"
+                               Text="Value: 50"
+                               HorizontalTextAlignment="Center"/>
+                    </VerticalStackLayout>
+                </Frame>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Event Log -->
+        <Frame Grid.Row="2" BorderColor="Black" HasShadow="True" Padding="5">
+            <Grid RowDefinitions="Auto,*,Auto">
+                <Label Grid.Row="0"
+                       Text="Event Log"
+                       FontSize="14"
+                       FontAttributes="Bold"
+                       BackgroundColor="#E0E0E0"
+                       Padding="5"/>
+
+                <ScrollView Grid.Row="1">
+                    <Label x:Name="EventLog"
+                           Text=""
+                           FontSize="10"
+                           FontFamily="Courier New"
+                           Padding="5"/>
+                </ScrollView>
+
+                <Button Grid.Row="2"
+                        Text="Clear Log"
+                        Clicked="OnClearLogClicked"
+                        FontSize="12"
+                        Padding="5,2"/>
+            </Grid>
+        </Frame>
+
+    </Grid>
+
+</ContentPage>
