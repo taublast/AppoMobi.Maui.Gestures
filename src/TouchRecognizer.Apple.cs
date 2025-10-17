@@ -130,10 +130,14 @@ namespace AppoMobi.Maui.Gestures
         {
             try
             {
+                if (_twoFingerTapRecognizer != null)
+                {
+                    _view?.RemoveGestureRecognizer(_twoFingerTapRecognizer);
+                }
+
                 _view?.RemoveGestureRecognizer(this);
 
                 DetachPanning();
-                ;
             }
             catch (Exception e)
             {
@@ -156,12 +160,11 @@ namespace AppoMobi.Maui.Gestures
                 _view.AddGestureRecognizer(hoverGestureRecognizer);
 
                 // Add two-finger tap recognizer for right-click (WWDC 2020: context menus use button mask to recognize two-finger taps)
-                var twoFingerTapRecognizer = new UITapGestureRecognizer(HandleTwoFingerTap)
+                _twoFingerTapRecognizer = new UITapGestureRecognizer(HandleTwoFingerTap)
                 {
-                    ButtonMaskRequired = UIEventButtonMask.Secondary,
-                    Delegate = this
+                    ButtonMaskRequired = UIEventButtonMask.Secondary, Delegate = this
                 };
-                _view.AddGestureRecognizer(twoFingerTapRecognizer);
+                _view.AddGestureRecognizer(_twoFingerTapRecognizer);
 
                 Debug.WriteLine("✓ Added two-finger tap recognizer");
             }
@@ -170,6 +173,7 @@ namespace AppoMobi.Maui.Gestures
         }
 
         PointF _lastPoint;
+        private UITapGestureRecognizer _twoFingerTapRecognizer;
 
         public override bool ShouldRequireFailureOfGestureRecognizer(UIGestureRecognizer otherGestureRecognizer)
         {
@@ -178,7 +182,9 @@ namespace AppoMobi.Maui.Gestures
 
         private bool ShouldRecLocked(UIGestureRecognizer gesturerecognizer, UIGestureRecognizer othergesturerecognizer)
         {
-            if (othergesturerecognizer == _childPanGestureRecognizer || othergesturerecognizer == this)
+            if (othergesturerecognizer == _childPanGestureRecognizer
+                || othergesturerecognizer == _twoFingerTapRecognizer ||
+                othergesturerecognizer == this)
             {
                 return true; // Allow simultaneous recognition with child UIPanGestureRecognizer
             }
