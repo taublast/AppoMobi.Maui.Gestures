@@ -63,6 +63,7 @@
 
 
   <ItemGroup>
+    <None Include="..\Claude.md" Link="Claude.md" />
     <None Include="..\icon128.png">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>

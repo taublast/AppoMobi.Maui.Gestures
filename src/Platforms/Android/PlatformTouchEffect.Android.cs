@@ -75,7 +75,7 @@ namespace AppoMobi.Maui.Gestures
         {
             try
             {
-                var args = TouchArgsPool.Rent(id, actionType, pointerLocation, null);
+                var args = new TouchActionEventArgs(id, actionType, pointerLocation, null);
 
                 args.Wheel = Wheel;
                 args.NumberOfTouches = CountFingers;
@@ -96,7 +96,7 @@ namespace AppoMobi.Maui.Gestures
         {
             try
             {
-                var args = TouchArgsPool.Rent(id, actionType, pointerLocation, null);
+                var args = new TouchActionEventArgs(id, actionType, pointerLocation, null);
                 args.Wheel = Wheel;
                 args.NumberOfTouches = CountFingers;
                 args.IsInsideView = isInsideView;
@@ -126,7 +126,7 @@ namespace AppoMobi.Maui.Gestures
         {
             try
             {
-                var args = TouchArgsPool.Rent(id, TouchActionType.Pointer, pointerLocation, null);
+                var args = new TouchActionEventArgs(id, TouchActionType.Pointer, pointerLocation, null);
                 args.Wheel = Wheel;
                 args.NumberOfTouches = CountFingers;
                 args.IsInsideView = isInsideView;
@@ -154,7 +154,7 @@ namespace AppoMobi.Maui.Gestures
         {
             try
             {
-                var args = TouchArgsPool.Rent(id, TouchActionType.Wheel, pointerLocation, null);
+                var args = new TouchActionEventArgs(id, TouchActionType.Wheel, pointerLocation, null);
                 args.Wheel = Wheel;
                 args.NumberOfTouches = CountFingers;
                 args.IsInsideView = isInsideView;

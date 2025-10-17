@@ -126,54 +126,6 @@
             Distance = new DistanceInfo();
         }
 
-        /// <summary>
-        /// Resets this instance for reuse from the object pool.
-        /// This is called by TouchArgsPool.Rent() to initialize a pooled object.
-        /// DO NOT call this method directly - use TouchArgsPool.Rent() instead.
-        /// </summary>
-        internal void Reset(long id, TouchActionType type, PointF location, object context)
-        {
-            Id = id;
-            Type = type;
-            Location = location;
-            Context = context;
-            Timestamp = DateTime.Now;
-
-            // Reuse existing DistanceInfo instead of allocating new
-            Distance.Delta = PointF.Zero;
-            Distance.Total = PointF.Zero;
-            Distance.Start = PointF.Zero;
-            Distance.End = PointF.Zero;
-            Distance.Velocity = PointF.Zero;
-            Distance.TotalVelocity = PointF.Zero;
-
-            // Clear other fields
-            PreventDefault = false;
-            StartingLocation = PointF.Zero;
-            IsInContact = false;
-            IsInsideView = false;
-            Handled = false;
-            NumberOfTouches = 0;
-            DeltaTimeMs = 0;
-            Wheel = null;
-            Pointer = null;
-            Manipulation = null;
-        }
-
-        /// <summary>
-        /// Clears all references to prevent memory leaks when object sits in pool.
-        /// This is called by TouchArgsPool.Return() before returning object to pool.
-        /// DO NOT call this method directly - use TouchArgsPool.Return() instead.
-        /// </summary>
-        internal void Clear()
-        {
-            // Clear references to prevent memory leaks when object sits in pool
-            Context = null;
-            Wheel = null;
-            Pointer = null;
-            Manipulation = null;
-        }
-
         public long Id { private set; get; }
 
         /// <summary>
@@ -257,21 +209,10 @@
 
         /// <summary>
         /// In pixels inside parent view,
-        /// 0,0 is top-left corner of the view.
-        /// Changed from record to class to enable object pooling and reduce allocations.
+        /// 0,0 is top-left corner of the view
         /// </summary>
-        public class DistanceInfo
+        public record DistanceInfo
         {
-            public DistanceInfo()
-            {
-                Delta = PointF.Zero;
-                Total = PointF.Zero;
-                Start = PointF.Zero;
-                End = PointF.Zero;
-                Velocity = PointF.Zero;
-                TotalVelocity = PointF.Zero;
-            }
-
             /// <summary>
             /// In pixels inside parent view,
             /// 0,0 is top-left corner of the view

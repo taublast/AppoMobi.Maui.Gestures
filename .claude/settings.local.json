@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(dotnet new:*)",
-      "Bash(dotnet build:*)"
+      "Bash(dotnet build:*)",
+      "Bash(git log:*)"
     ],
     "deny": [],
     "ask": []

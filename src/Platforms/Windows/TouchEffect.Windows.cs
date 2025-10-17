@@ -359,7 +359,7 @@ namespace AppoMobi.Maui.Gestures
 
                 var windowsPoint = pointerPoint.Position;
 
-                var args = TouchArgsPool.Rent(
+                var args = new TouchActionEventArgs(
                     pointer.Pointer.PointerId,
                     touchActionType,
                     new Microsoft.Maui.Graphics.PointF((float)(windowsPoint.X * TouchEffect.Density), (float)(windowsPoint.Y * TouchEffect.Density)), null);
@@ -394,7 +394,7 @@ namespace AppoMobi.Maui.Gestures
                 var pointerPoint = pointer.GetCurrentPoint(sender as UIElement);
                 var windowsPoint = pointerPoint.Position;
 
-                var args = TouchArgsPool.Rent(
+                var args = new TouchActionEventArgs(
                     pointer.Pointer.PointerId,
                     TouchActionType.Pointer,
                     new Microsoft.Maui.Graphics.PointF((float)(windowsPoint.X * TouchEffect.Density), (float)(windowsPoint.Y * TouchEffect.Density)), null);
@@ -535,7 +535,7 @@ namespace AppoMobi.Maui.Gestures
                 var pointerPoint = pointer.GetCurrentPoint(sender as UIElement);
                 var windowsPoint = pointerPoint.Position;
 
-                var args = TouchArgsPool.Rent(
+                var args = new TouchActionEventArgs(
                     pointer.Pointer.PointerId,
                     touchActionType,
                     new Microsoft.Maui.Graphics.PointF((float)(windowsPoint.X * TouchEffect.Density), (float)(windowsPoint.Y * TouchEffect.Density)), null);
@@ -579,7 +579,7 @@ namespace AppoMobi.Maui.Gestures
                 var pointerPoint = pointer.GetCurrentPoint(sender as UIElement);
                 var windowsPoint = pointerPoint.Position;
 
-                var args = TouchArgsPool.Rent(
+                var args = new TouchActionEventArgs(
                     pointer.Pointer.PointerId,
                     touchActionType,
                     new Microsoft.Maui.Graphics.PointF((float)(windowsPoint.X * TouchEffect.Density), (float)(windowsPoint.Y * TouchEffect.Density)), null);
@@ -617,7 +617,7 @@ namespace AppoMobi.Maui.Gestures
                 var pointerPoint = pointer.GetCurrentPoint(sender as UIElement);
                 var windowsPoint = pointerPoint.Position;
 
-                var args = TouchArgsPool.Rent(
+                var args = new TouchActionEventArgs(
                     pointer.Pointer.PointerId,
                     TouchActionType.Pointer,
                     new Microsoft.Maui.Graphics.PointF((float)(windowsPoint.X * TouchEffect.Density), (float)(windowsPoint.Y * TouchEffect.Density)), null);

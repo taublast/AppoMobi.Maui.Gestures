@@ -1003,16 +1003,6 @@ namespace AppoMobi.Maui.Gestures
                 {
                     Console.WriteLine(e);
                 }
-                finally
-                {
-                    // Return args to pool for reuse after all event handlers have completed
-                    // IMPORTANT: Do not return _lastArgs to pool as it's still referenced!
-                    // Only return the current args after all processing is done
-                    if (args != _lastArgs)
-                    {
-                        TouchArgsPool.Return(args);
-                    }
-                }
 
             }
 

@@ -22,7 +22,7 @@ namespace AppoMobi.Maui.Gestures
         {
             try
             {
-                var args = TouchArgsPool.Rent(id, actionType, point, null);
+                var args = new TouchActionEventArgs(id, actionType, point, null);
                 args.Wheel = Wheel;
                 args.NumberOfTouches = CountFingers;
                 args.IsInsideView = isInsideView;
@@ -63,7 +63,7 @@ namespace AppoMobi.Maui.Gestures
         {
             try
             {
-                var args = TouchArgsPool.Rent(id, actionType, point, null);
+                var args = new TouchActionEventArgs(id, actionType, point, null);
                 args.Wheel = Wheel;
                 args.NumberOfTouches = CountFingers;
                 args.IsInsideView = isInsideView;
@@ -92,7 +92,7 @@ namespace AppoMobi.Maui.Gestures
         {
             try
             {
-                var args = TouchArgsPool.Rent(id, actionType, point, null);
+                var args = new TouchActionEventArgs(id, actionType, point, null);
                 args.Wheel = Wheel;
                 args.NumberOfTouches = CountFingers;
                 args.IsInsideView = isInsideView;
@@ -125,7 +125,7 @@ namespace AppoMobi.Maui.Gestures
         {
             try
             {
-                var args = TouchArgsPool.Rent(id, TouchActionType.Pointer, point, null);
+                var args = new TouchActionEventArgs(id, TouchActionType.Pointer, point, null);
                 args.Wheel = Wheel;
                 args.NumberOfTouches = 0; // No touches, just pointer
                 args.IsInsideView = true; // Always inside when hovering
@@ -153,7 +153,7 @@ namespace AppoMobi.Maui.Gestures
         {
             try
             {
-                var args = TouchArgsPool.Rent(id, TouchActionType.Wheel, point, null);
+                var args = new TouchActionEventArgs(id, TouchActionType.Wheel, point, null);
                 args.Wheel = Wheel;
                 args.NumberOfTouches = 0;
                 args.IsInsideView = isInsideView;
