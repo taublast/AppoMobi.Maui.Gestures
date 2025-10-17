@@ -434,7 +434,7 @@ lock (lockOnTouch)
 | Button | Windows | macCatalyst | Android | Notes |
 |--------|---------|-------------|---------|-------|
 | Left | ✅ | ✅ | ✅ | Fully supported all platforms |
-| Right | ✅ | ✅ | ✅ | Fully supported all platforms |
+| Right | ✅ | ✅ | ✅ | Limited support all platforms |
 | Middle | ✅ | ❌ | ✅ | UIKit ButtonMask limitation on macCatalyst |
 | XButton1 (Back) | ✅ | ❌ | ✅ | UIKit limitation on macCatalyst |
 | XButton2 (Forward) | ✅ | ❌ | ✅ | UIKit limitation on macCatalyst |
@@ -442,7 +442,7 @@ lock (lockOnTouch)
 
 **Key Limitation Notes:**
 - **Windows**: XButton3-9 are detected but reported as generic `MouseButton.Extended` with `buttonNumber=6` due to WinUI `PointerRoutedEventArgs.Properties` not providing individual flags
-- **macCatalyst**: UIKit `ButtonMask` only provides Primary/Secondary (iOS 13.4+)
+- **macCatalyst**: UIKit `ButtonMask` only provides Primary/Secondary (iOS 13.4+) and secondary only with real mouse attached.
 - **Android**: `MotionEvent.ButtonState` only provides Primary/Secondary/Tertiary/Back/Forward
 
 **Other Limitations:**
@@ -463,126 +463,5 @@ lock (lockOnTouch)
 
 ---
 
-## Testing Strategy
-
-### Phase 1: Basic Functionality (macCatalyst)
-Create simple test app with:
-- Button with TouchEffect
-- Canvas for pointer tracking
-- Visual feedback for all events
-- Log window showing event details
-
-### Phase 2: Pointer Events (macCatalyst)
-Test specific scenarios:
-- Left/right/middle click
-- Hover tracking
-- Trackpad scrolling
-- Multi-button combinations
-
-### Phase 3: Edge Cases
-- Nested ScrollViews with Manual mode
-- Multi-touch scenarios
-- Rapid input sequences
-
-### Phase 4: Cross-Platform Validation
-- Compare behavior across platforms
-- Document inconsistencies
-- File issues for platform-specific bugs
-
----
-
-## Changelog
-
-### 2025-10-17 - Object Pooling REJECTED
-
-**Decision: ❌ Object pooling rejected due to async mutation bug**
-
-**Problem Identified:**
-Object pooling for `TouchActionEventArgs` creates a **critical async mutation bug** that corrupts user data when event handlers use async/await patterns.
-
-**The Bug Scenario:**
-```csharp
-TouchEffect.Tapped += async (sender, args) =>
-{
-    // Event #1: args.Location = (100, 200)
-    var location = args.Location;
-    await Task.Delay(50); // User performs async work
-
-    // BUG: During await, Event #2 fires, Event #1's args returned to pool
-    // The SAME args object is reused for Event #2 and MUTATED
-    // NOW: args.Location = (300, 400) - CORRUPTED!
-    Console.WriteLine(args.Location); // Wrong data!
-};
-```
-
-**Why This Happens:**
-1. Event handler runs synchronously → handler returns immediately (async method starts)
-2. Library returns `args` to pool after handler returns
-3. New gesture event reuses and mutates the SAME `args` object
-4. User's async code continues → reads **corrupted data**
-
-**Why We Can't Fix It:**
-
-**Option 1: Clone before firing events**
-- Would require cloning for every event invocation
-- **Eliminates 100% of pooling benefit** (same allocation count as without pooling)
-- No performance gain, only added complexity
-
-**Option 2: Document "no async" rule**
-- Extremely fragile - users will inevitably use async
-- Common pattern in modern C# (network calls, file I/O, animations)
-- Would cause hard-to-debug data corruption bugs
-
-**Option 3: Reference counting**
-- Complex to implement correctly
-- Race condition prone
-- Adds significant overhead negating performance gains
-
-**Conclusion:**
 Object pooling is **fundamentally incompatible** with async event handlers in C#. Since async/await is a core pattern in modern .NET development, pooling would create a dangerous footgun for library users.
-
-**Reverted Changes:**
-- Deleted `TouchArgsPool.cs`
-- Removed `Reset()` and `Clear()` methods from `TouchActionEventArgs`
-- Converted `DistanceInfo` back to immutable `record`
-- Restored all platform code to use `new TouchActionEventArgs()`
-- Removed pool return logic from `TouchEffect.cs`
-
-**Alternative Approaches:**
-- Event coalescing (reduce event frequency)
-- Lazy initialization of pointer data (only create when needed)
-- Accept allocation cost as necessary for API safety
-
----
-
-### 2025-10-17 - macCatalyst Pointer Implementation Improvements
-
-**Fixed Issues:**
-- ✅ **Issue #1 (REMOVED)**: Replaced heuristic-based mouse button detection with proper UIEvent.ButtonMask (iOS 13.4+)
-- ✅ **Issue #2 (REMOVED)**: Removed hacky UIScrollView trackpad detection workaround
-- ✅ **Issue #3 (REMOVED)**: Enabled parent recognizer cancellation for Manual mode
-
-**Changes Made:**
-1. **TouchRecognizer.Apple.cs:**
-   - Implemented `GetButtonFromEvent()` using UIEvent.ButtonMask for reliable button detection
-   - Implemented `GetCurrentPressedButtons()` to extract button state flags
-   - Replaced `IsMouseEvent()` heuristic with proper `IsPointerEvent()` using UITouch.Type
-   - Added `GetPointerDeviceType()` to distinguish Mouse, Pen, and Touch
-   - Removed all trackpad UIScrollView workaround code
-   - Uncommented and enabled parent recognizer cancellation in TouchesMoved
-
-2. **PlatformTouchEffect.Apple.cs:**
-   - Updated `FireEventWithMouse()` signature to include `MouseButtons pressedButtons` and `float pressure`
-   - Updated `FireEventWithMouseMove()` signature to include `MouseButtons pressedButtons` and `float pressure`
-   - Removed `FireEventWithTrackpadPan()` method (no longer needed)
-
-**Result:**
-- macCatalyst now has reliable left/right click detection using proper iOS 13.4+ APIs
-- Manual mode can now properly cancel parent ScrollView gestures
-- Code is cleaner with proper UIKit best practices (WWDC 2020)
-- Known limitations documented (middle button, extended buttons due to UIKit API)
-
----
-
-*Initial analysis based on static code review. macCatalyst pointer implementation updated with proper UIKit APIs. Runtime testing recommended to validate the improvements.*
-
+ 

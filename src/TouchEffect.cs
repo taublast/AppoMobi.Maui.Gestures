@@ -771,7 +771,7 @@ namespace AppoMobi.Maui.Gestures
                 if (wIllLock != value)
                 {
                     wIllLock = value;
-                    Debug.WriteLine($"WIllLock: {value}");
+                    //Debug.WriteLine($"WIllLock: {value}");
                 }
             }
         }
