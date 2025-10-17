@@ -20,7 +20,7 @@ public class TouchBorder : Border, IGestureListener
         // Add pointer information if available
         if (args.Pointer != null)
         {
-            eventInfo.Append($" [POINTER {args.Pointer.DeviceType} Btn:{args.Pointer.Button}({args.Pointer.ButtonNumber}) {args.Pointer.State}");
+            eventInfo.Append($" [POINTER scrolling: {args.Pointer.IsScrolling} {args.Pointer.DeviceType} {args.Pointer.State} Btn:{args.Pointer.Button}({args.Pointer.ButtonNumber})");
 
             if (args.Pointer.DeviceType == PointerDeviceType.Pen)
             {

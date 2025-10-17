@@ -91,12 +91,8 @@ namespace AppoMobi.Maui.Gestures
         /// <param name="gesture">The UIPanGestureRecognizer triggering the action.</param>
         private void HandlePan(UIPanGestureRecognizer gesture)
         {
-            if (gesture.State == UIGestureRecognizerState.Began && _parent != null)
-            {
-                Debug.WriteLine("PAN BEGAN !!!");
-            }
 
-            // Handle two-finger trackpad scroll (AllowedScrollTypesMask allows this)
+            // Handle two-finger trackpad scroll  
             if (gesture.State == UIGestureRecognizerState.Changed && _parent != null)
             {
                 // Get the translation - this is the scroll delta for two-finger scroll
@@ -117,11 +113,10 @@ namespace AppoMobi.Maui.Gestures
                 // Only fire if there's actual movement
                 if (delta.X != 0 || delta.Y != 0)
                 {
-                    Debug.WriteLine(
-                        $"[Pan/Scroll] Delta: ({delta.X:F2}, {delta.Y:F2}) at ({point.X:F0}, {point.Y:F0})");
+                    Debug.WriteLine($"[Pan/Scroll] Delta: ({delta.X:F2}, {delta.Y:F2}) at ({point.X:F0}, {point.Y:F0})");
 
                     // Fire wheel event for scroll
-                    _parent.FireEventWheel(0, point, delta);
+                    _parent.FireEventScroll(0, point, delta);
 
                     // Reset translation for next event
                     gesture.SetTranslation(CGPoint.Empty, _view);

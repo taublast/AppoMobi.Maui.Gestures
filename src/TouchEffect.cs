@@ -59,6 +59,11 @@ namespace AppoMobi.Maui.Gestures
             public int ButtonNumber { get; set; }
 
             /// <summary>
+            /// This is a scrolling gesture
+            /// </summary>
+            public bool IsScrolling { get; set; }
+
+            /// <summary>
             /// State of the button that triggered this event
             /// </summary>
             public MouseButtonState State { get; set; }
