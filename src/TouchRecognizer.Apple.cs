@@ -447,12 +447,11 @@ namespace AppoMobi.Maui.Gestures
                     {
                         var deviceType = GetPointerDeviceType(touch);
                         var point = GetPointFromTouch(touch);
-                        var buttonInfo = GetReleasedButtonFromEvent(evt);
+                        var buttonInfo = GetButtonFromEvent(evt);
                         var pressedButtons = GetCurrentPressedButtons(evt);
 
                         if (buttonInfo.HasValue)
                         {
-                            // Update tracked button state
                             _currentPressedButtons = pressedButtons;
 
                             // Get pressure for Apple Pencil
@@ -475,16 +474,6 @@ namespace AppoMobi.Maui.Gestures
                             {
                                 _parent.FireEvent(id, TouchActionType.Exited, touch);
                             }
-
-                            Debug.WriteLine($"[macCatalyst] Button RELEASED: {buttonInfo.Value.button} ({buttonInfo.Value.buttonNumber})");
-                        }
-                        else
-                        {
-                            // No button info but it's a pointer event - treat as touch release
-                            if (isInside)
-                                _parent.FireEvent(id, TouchActionType.Released, touch);
-                            else
-                                _parent.FireEvent(id, TouchActionType.Exited, touch);
                         }
                     }
                     else
