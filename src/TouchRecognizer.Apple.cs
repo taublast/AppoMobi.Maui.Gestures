@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using CoreGraphics;
 using Foundation;
+using Microsoft.Maui.Controls;
 using UIKit;
 
 namespace AppoMobi.Maui.Gestures
@@ -205,12 +206,7 @@ namespace AppoMobi.Maui.Gestures
 
         private bool ShouldEvent(UIGestureRecognizer gesturerecognizer, UIEvent @event)
         {
-            // Allow scroll events to be processed by HandlePan
-            if (@event.Type == UIEventType.Scroll)
-            {
-                HandleScrollEvent(gesturerecognizer, @event);
-                return true; // Allow the gesture to proceed
-            }
+ 
             return true;
         }
 
@@ -366,8 +362,7 @@ namespace AppoMobi.Maui.Gestures
                 // Scroll events are handled via ShouldReceiveEvent delegate, not here
                 if (evt.Type == UIEventType.Scroll)
                 {
-                    // Skip - scroll events don't have button presses and are handled elsewhere
-                    continue;
+                    HandleScrollEvent(_childPanGestureRecognizer, evt);
                 }
 
                 // Check if this is a pointer event (mouse/pen) on iOS 13.4+
