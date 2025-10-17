@@ -222,6 +222,8 @@ namespace AppoMobi.Maui.Gestures
 
                 _touchRecognizer.Attach();
 
+                _appleView.MultipleTouchEnabled = true;
+
                 //panRecognizer = new PanGestureRecognizer(Element, view, touchEffect);
                 //view.AddGestureRecognizer(panRecognizer);
 

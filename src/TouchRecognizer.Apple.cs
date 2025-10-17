@@ -206,39 +206,7 @@ namespace AppoMobi.Maui.Gestures
 
         private bool ShouldEvent(UIGestureRecognizer gesturerecognizer, UIEvent @event)
         {
- 
             return true;
-        }
-
-        private void HandleScrollEvent(UIGestureRecognizer gestureRecognizer, UIEvent evt)
-        {
-            // Two-finger scroll events come through here
-            // Get the scroll delta from the pan gesture recognizer
-            if (gestureRecognizer is UIPanGestureRecognizer panGesture && _parent != null)
-            {
-                // Get translation in view coordinates
-                var translation = panGesture.TranslationInView(_view);
-                var location = panGesture.LocationInView(_view);
-
-                // Convert to pixel coordinates
-                var point = new PointF(
-                    (float)(location.X * TouchEffect.Density),
-                    (float)(location.Y * TouchEffect.Density)
-                );
-
-                var delta = new PointF(
-                    (float)(translation.X * TouchEffect.Density),
-                    (float)(translation.Y * TouchEffect.Density)
-                );
-
-                // Fire wheel event for scroll
-                _parent.FireEventWheel(0, point, delta);
-
-                // Reset translation for next event
-                panGesture.SetTranslation(CGPoint.Empty, _view);
-
-                Debug.WriteLine($"[Scroll] Delta: ({delta.X:F2}, {delta.Y:F2}) at ({point.X:F0}, {point.Y:F0})");
-            }
         }
 
         void UnlockTouch()
@@ -355,15 +323,12 @@ namespace AppoMobi.Maui.Gestures
 
             _parent.CountFingers = (int)NumberOfTouches;
 
+            // Debug logging to see what events we're receiving
+            Debug.WriteLine($"[TouchesBegan] Type:{evt.Type} Touches:{touches.Count} NumberOfTouches:{NumberOfTouches} ButtonMask:{evt.ButtonMask}");
+
             foreach (UITouch touch in touches.Cast<UITouch>())
             {
                 long id = ((IntPtr)touch.Handle).ToInt64();
-
-                // Scroll events are handled via ShouldReceiveEvent delegate, not here
-                if (evt.Type == UIEventType.Scroll)
-                {
-                    HandleScrollEvent(_childPanGestureRecognizer, evt);
-                }
 
                 // Check if this is a pointer event (mouse/pen) on iOS 13.4+
                 if (IsPointerEvent(touch))
@@ -410,6 +375,11 @@ namespace AppoMobi.Maui.Gestures
             base.TouchesMoved(touches, evt);
 
             _parent.CountFingers = (int)NumberOfTouches;
+
+            if (evt.Type == UIEventType.Scroll)
+            {
+                Debug.WriteLine("WE GOT SCROLLING !!!");
+            }
 
             foreach (UITouch touch in touches.Cast<UITouch>())
             {
@@ -465,6 +435,11 @@ namespace AppoMobi.Maui.Gestures
             base.TouchesEnded(touches, evt);
 
             _parent.CountFingers = (int)NumberOfTouches;
+
+            if (evt.ButtonMask == UIEventButtonMask.Secondary)
+            {
+                Debug.WriteLine("We GOT RIGHT CLICK !!!");
+            }
 
             var uiTouches = touches.Cast<UITouch>();
             if (uiTouches.Count() > 0)
