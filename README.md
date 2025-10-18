@@ -10,12 +10,11 @@ This library is used by [DrawnUI for .NET MAUI](https://github.com/taublast/Draw
 
 ## What's New
 
-### Version 1.10.1
 * Added `Manual` touch mode for dynamic gesture control with parent controls, allowing true cooperative gesture handling inside ScrollViews and other containers.
 * Pointer Data Support: Added rich pointer/mouse event data with `TouchActionEventArgs.Pointer` property
-* Windows (Full Support): Complete mouse button detection (Left, Right, Middle, XButton1-9), pen pressure, hover tracking
-* Android (Limited Support): Mouse button detection (Left, Right, Middle, XButton1-2), stylus pressure, hover tracking, scroll wheel
-* Hover Tracking: Mouse movement without button press (Windows, Android)
+* Windows: Hover mouse/pointer tracking, mouse button detection (up tu 9 buttons), pen pressure, hover tracking
+* Android: Hover mouse/pointer tracking, limited mouse button detection
+* iOS/MacCatalyst: Hover mouse/pointer tracking, two-fingers scrolling, limited mouse button detection
 
 ---
 
@@ -29,8 +28,7 @@ This library is used by [DrawnUI for .NET MAUI](https://github.com/taublast/Draw
 * ✅ Platform-agnostic gesture processing
 * ✅ Commands and event handlers support
 * ✅ Mouse wheel support on Windows
-* ✅ **Mouse button support** (Left, Right, Middle, XButton1-9) with pen pressure
-* ✅ **Desktop-optimized** hover tracking and multi-button interactions
+* ✅ Mouse/touchpad support (limited upon platform)
 
 ---
 
@@ -103,12 +101,12 @@ The library supports the following gesture types:
 | **Tapped** | Quick tap (with velocity threshold) | `Tapped` event, `CommandTapped` |
 | **Long Pressing** | Finger held down for extended time | `LongPressing` event, `CommandLongPressing` |
 | **Panning** | Finger moves across screen | `Panning` event, `PanningCommand` |
-| **Panned** | Pan gesture completed | `Panned` event, `PannedCommand` |
 | **Pinched** | Two-finger pinch/zoom | `Pinched` event, `PinchedCommand` |
+| **Wheel** | Mouse wheel (Windows) | Wheel event with delta |
 | **Rotation** | Two-finger rotation | Multi-touch manipulation data |
 | **Wheel** | Mouse wheel (Windows) | Wheel event with delta |
-| **Pointer** | Mouse/pen hover without press | Pointer event with device info |
-| **Mouse Buttons** | Left/Right/Middle/XButton1-9 clicks | Mouse event data with button info |
+| **Pointer** | Mouse/touchpad related data |
+
 
 ---
 
@@ -120,54 +118,15 @@ Touch handling modes control how gestures interact with parent containers like S
 public enum TouchHandlingStyle
 {
     Default,      // Normal behavior
-    Lock,         // Lock input for this control
-    Manual,       // Dynamic control via WIllLock property
-    Disabled      // Same as InputTransparent=true
+    Lock,         // Lock all input for this control only
+    Manual,       // Dynamic control via WIllLock property, used by DrawnUI to work in cooperation with native ScrollView
+    Disabled      // Same as InputTransparent = true
 }
 ```
 
-### Default Mode
+Not sure what mode to use? Start with `Default`.
 
-**Use case**: Standard gesture handling with no special behavior.
-
-```xml
-<Label Text="Normal Touch"
-       touch:TouchEffect.ShareTouch="Default"
-       touch:TouchEffect.CommandTapped="{Binding TapCommand}" />
-```
-
-**Behavior**:
-- Control receives gestures normally
-- Parent containers (like ScrollView) can intercept gestures
-- ⚠️ On iOS, parent ScrollViews may steal pan gestures
-
----
-
-### Lock Mode
-
-**Use case**: Controls that need exclusive gesture handling inside scrollable containers.
-
-```xml
-<Slider touch:TouchEffect.ShareTouch="Lock"
-        touch:TouchEffect.ForceAttach="True" />
-```
-
-**Behavior**:
-- **iOS**: Sets gesture recognizer delegates to block parent recognizers
-- **Android**: Calls `RequestDisallowInterceptTouchEvent(true)` on parent
-- Locks input for the control once a touch begins
-- Parent ScrollView won't scroll at all (vertical or horizontal) while touching this control
-
-**When to use**:
-- Sliders inside ScrollViews (but see Cooperative mode below)
-- Custom pan/drag controls
-- Drawing canvases
-
-**Limitation**: Blocks ALL parent gestures, including vertical scrolling for horizontal controls ❌
-
----
-
-### Manual Mode (NEW!)
+### About Manual Mode
 
 **Use case**: Controls that need **dynamic control** over parent gesture blocking - the ultimate flexibility! 🎯
 
@@ -194,7 +153,7 @@ Manual mode gives you full control over gesture cooperation by letting you decid
 
 Manual mode works by:
 1. **Always delivering touch events** to your control (so you receive `TouchesEnded` for snapping)
-2. **Listening to the `WIllLock` state** you set dynamically
+2. **Listening to the `WIllLock` state** YOU set dynamically
 3. **Blocking or releasing the parent** based on your control's needs
 
 **The WIllLock Property**:
@@ -208,30 +167,7 @@ public enum ShareLockState
 }
 ```
 
-Access via: `TouchEffect.WIllLock` property
-
-**Platform Implementation**:
-
-- **iOS**:
-  - Creates a child `UIPanGestureRecognizer` that can be dynamically failed/succeeded
-  - Captures reference to parent ScrollView's recognizer
-  - When `WIllLock = Locked`: Cancels parent recognizer to take control
-  - When `WIllLock = Unlocked`: Fails child recognizer to release parent
-  - Main recognizer always gets `TouchesEnded` for proper snapping
-
-- **Android**:
-  - Dynamically calls `RequestDisallowInterceptTouchEvent()` based on `WIllLock` state
-  - When `WIllLock = Locked`: Blocks parent from intercepting touch events
-  - When `WIllLock = Unlocked`: Allows parent to intercept touch events
-
-- **Windows**:
-  - Dynamically captures/releases pointer and changes `ManipulationMode` based on `WIllLock` state
-  - When `WIllLock = Locked`: Captures pointer + sets `ManipulationMode = None` to block parent
-  - When `WIllLock = Unlocked`: Releases pointer + sets `ManipulationMode = System` to allow parent
-  - Mouse wheel events are blocked from parent when locked, but still delivered to your control
-  - Control always receives all pointer and wheel events regardless of lock state
-
-**Perfect for**:
+**Use for custom controls**:
 - ✅ Horizontal carousels in vertical ScrollViews (with snapping)
 - ✅ Custom sliders that need directional control
 - ✅ Pan-to-dismiss gestures alongside scrolling
@@ -306,102 +242,22 @@ public class MyCarousel : ContentView, IGestureListener
 }
 ```
 
-**Key Benefits**:
-
-1. **Always Receive Up Events**: Unlike `Lock` mode, your control always gets `TouchesEnded`/Up for proper snapping
-2. **Dynamic Control**: Decide at runtime based on gesture direction, velocity, or any logic
-3. **True Cooperation**: Can handle the "ScrollView started first" edge case by cancelling parent
-4. **Platform-Optimized**: Each platform uses the most efficient native approach
-
-**When to Use Each Mode**:
-
-| Mode | Use Case | Parent Behavior |
-|------|----------|-----------------|
-| `Default` | Simple taps, no parent issues | Parent may intercept gestures |
-| `Lock` | Always block parent (drawing canvas) | Parent never gets gestures |
-| `Manual` | Dynamic cooperation (carousel, slider) | You control via `WIllLock` |
-| `Disabled` | Temporarily disable gestures | All gestures pass through |
-
----
-
-### Disabled Mode
-
-**Use case**: Temporarily disable touch handling without removing the effect.
-
-```xml
-<Frame touch:TouchEffect.ShareTouch="Disabled">
-    <!-- This won't receive any gestures -->
-</Frame>
-```
-
-**Behavior**: Equivalent to `InputTransparent="True"` but managed through the effect.
 
 ---
 
 ## Mouse and Pen Support
 
-The library provides comprehensive mouse and pen support on desktop platforms (Windows, macCatalyst) with full button tracking, hover detection, and pressure sensitivity.
+The library provides mouse and pen support with button tracking, hover detection, and pressure sensitivity, where platform allows that.
+
+### Platform Support
+
+- **Windows**: Full pointer support, up to 8 buttons wheel, pen pressure, hover tracking
+- **Android**:  Basic support (Left/Right click, hover tracking)
+- **iOS/MacCatalyst**: Basic support (Left click, 2-fingers scrolling, hover tracking, Apple Pencil detection)
 
 ### Mouse Button Events
 
-Mouse button events are handled differently based on the button type to maintain backward compatibility:
-
-- **Left Button (Primary)**: Uses standard touch events (`Down`, `Up`, `Tapped`) + mouse data
-- **Other Buttons**: Uses `Pointer` events with button state information
-
-```csharp
-public void OnGestureEvent(TouchActionType type, TouchActionEventArgs args, TouchActionResult action)
-{
-    // Check if this is a mouse/pen event
-    if (args.Pointer != null)
-    {
-        var mouse = args.Pointer;
-
-        switch (action)
-        {
-            case TouchActionResult.Down:
-            case TouchActionResult.Up:
-            case TouchActionResult.Tapped:
-                // LEFT button only - maintains backward compatibility
-                HandleLeftButton(mouse, args.Location);
-                break;
-
-            case TouchActionResult.Pointer:
-                // ALL other buttons + hover events
-                if (mouse.State == MouseButtonState.Pressed)
-                {
-                    // Right, Middle, XButton1-9 pressed
-                    HandleOtherButton(mouse.Button, args.Location);
-                }
-                else if (mouse.State == MouseButtonState.Released)
-                {
-                    // Button released
-                    HandleButtonRelease(mouse.Button);
-                }
-                else
-                {
-                    // Pure hover (no buttons pressed)
-                    HandleMouseHover(args.Location, mouse.DeviceType);
-                }
-                break;
-
-            case TouchActionResult.Panning:
-                // Drag with any button(s) pressed
-                HandleMouseDrag(mouse.PressedButtons, args.Location, args.Distance);
-                break;
-        }
-    }
-    else
-    {
-        // Regular touch event
-        HandleTouchEvent(type, args, action);
-    }
-}
-```
-
-### Mouse Event Data
-
-When `args.Pointer != null`, you have access to rich mouse/pen information:
+When `args.Pointer != null`, you have access to information:
 
 ```csharp
 public class PointerData
@@ -415,7 +271,7 @@ public class PointerData
     // Button state (Pressed/Released)
     public MouseButtonState State { get; set; }
 
-    // All currently pressed buttons (flags)
+    // Detected pressed buttons (flags)
     public MouseButtons PressedButtons { get; set; }
 
     // Device type (Mouse/Pen/Touch)
@@ -426,144 +282,8 @@ public class PointerData
 }
 ```
 
-### Supported Mouse Buttons
-
-```csharp
-public enum MouseButton
-{
-    Left,       // Primary button
-    Right,      // Secondary button
-    Middle,     // Wheel button
-    XButton1,   // Back button
-    XButton2,   // Forward button
-    XButton3,   // Gaming mouse button 6
-    XButton4,   // Gaming mouse button 7
-    XButton5,   // Gaming mouse button 8
-    XButton6,   // Gaming mouse button 9
-    XButton7,   // Gaming mouse button 10
-    XButton8,   // Gaming mouse button 11
-    XButton9,   // Gaming mouse button 12
-    Extended    // For buttons beyond predefined ones
-}
-
-[Flags]
-public enum MouseButtons
-{
-    None = 0,
-    Left = 1,
-    Right = 2,
-    Middle = 4,
-    XButton1 = 8,
-    XButton2 = 16,
-    // ... up to XButton9 = 2048
-}
-```
-
-### Common Usage Patterns
-
-**Context Menu on Right Click:**
-```csharp
-if (action == TouchActionResult.Pointer &&
-    args.Pointer?.State == MouseButtonState.Pressed &&
-    args.Pointer?.Button == MouseButton.Right)
-{
-    ShowContextMenu(args.Location);
-}
-```
-
-**Multi-Button Drag Operations:**
-```csharp
-if (action == TouchActionResult.Panning && args.Pointer != null)
-{
-    var buttons = args.Pointer.PressedButtons;
-
-    if (buttons.HasFlag(MouseButtons.Left))
-        HandleSelection(args.Location, args.Distance);
-    else if (buttons.HasFlag(MouseButtons.Middle))
-        HandlePanning(args.Distance);
-    else if (buttons.HasFlag(MouseButtons.Left | MouseButtons.Right))
-        HandleZoom(args.Distance);
-}
-```
-
-**Pen Pressure Sensitivity:**
-```csharp
-if (args.Pointer?.DeviceType == PointerDeviceType.Pen)
-{
-    var pressure = args.Pointer.Pressure; // 0.0 to 1.0
-    var strokeWidth = pressure * 10f;   // Variable stroke width
-    DrawWithPressure(args.Location, strokeWidth);
-}
-```
-
-**Gaming Mouse Support:**
-```csharp
-// Handle extended buttons for gaming mice
-switch (args.Pointer?.Button)
-{
-    case MouseButton.XButton1:
-        NavigateBack();
-        break;
-    case MouseButton.XButton2:
-        NavigateForward();
-        break;
-    case MouseButton.XButton3:
-        CustomAction1();
-        break;
-    // ... up to XButton9
-}
-```
-
-### Platform Support
-
-- **Windows**: Full support for all buttons, pen pressure, hover tracking
-- **macCatalyst**: Basic mouse support (Left/Right click, hover tracking, Apple Pencil detection)
-- **iOS/Android**: Touch events only (no mouse support)
-
-#### macCatalyst Implementation Notes
-
-The macCatalyst implementation provides basic mouse support with some limitations compared to Windows:
-
-**✅ Supported Features:**
-- ✅ Left and Right mouse button detection (basic)
-- ✅ Apple Pencil detection (UITouchType.Stylus)
-- ✅ Mouse vs touch differentiation
-- ✅ Hover tracking (mouse movement without button press)
-- ✅ Same smart button handling (Left = standard events, Right = Pointer events)
-
-**⚠️ Limitations:**
-- ❌ Extended buttons (XButton3-9) not available (UIKit limitation)
-- ❌ Pressure tracking during hover not available (UIKit limitation)
-- ⚠️ Right-click detection is heuristic-based, not as reliable as Windows
-- ⚠️ Middle button detection not implemented (UIKit doesn't expose it)
-
-**🔧 Technical Implementation:**
-```csharp
-// Mouse detection via touch characteristics
-private bool IsMouseEvent(UITouch touch, UIEvent evt)
-{
-    return touch.Type == UITouchType.Indirect ||
-           (touch.MaximumPossibleForce == 0 && touch.Force == 0);
-}
-
-// Hover tracking via UIHoverGestureRecognizer
-var hoverGestureRecognizer = new UIHoverGestureRecognizer(HandleHover);
-_view.AddGestureRecognizer(hoverGestureRecognizer);
-```
-
-**📝 Pressure Tracking Note:**
-- Pressure is available during Apple Pencil touch events
-- Pressure during hover is NOT available (UIKit limitation)
-- Mouse always reports pressure = 1.0f
-
-### Backward Compatibility
-
-Existing controls continue to work unchanged:
-- Touch events work exactly as before
-- Left mouse button behaves like touch (generates `Down`/`Up`/`Tapped`)
-- Only controls that check `args.Pointer != null` get enhanced mouse features
-
----
+ 
+ ---
 
 ## Advanced Usage
 
@@ -749,138 +469,20 @@ public void OnGestureEvent(TouchActionType type, TouchActionEventArgs args, Touc
 }
 ```
 
-### 4. Prevent Memory Leaks
-
-The effect auto-disposes when the element is detached, but you can manually dispose if needed:
-
-```csharp
-protected override void OnDisappearing()
-{
-    base.OnDisappearing();
-    // Effect auto-disposes, but you can clean up custom resources
-}
-```
 
 ---
 
-## Platform-Specific Notes
+## Tune Up
 
-### iOS
-- Uses custom `UIGestureRecognizer` implementations
-- `Lock` mode uses `ShouldRecognizeSimultaneously = false`
-- `Manual` mode creates dynamic child `UIPanGestureRecognizer` and captures parent recognizer references
-- Supports iOS 13.4+ with `ShouldReceiveEvent` delegate
+### Long press duration
 
-### Android
-- Uses `View.IOnTouchListener` and `GestureDetector`
-- `Lock` mode calls `RequestDisallowInterceptTouchEvent(true)`
-- `Manual` mode dynamically calls `RequestDisallowInterceptTouchEvent()` based on `WIllLock` state
-- Handles multi-pointer events correctly
-
-### Windows
-- Uses WinUI `FrameworkElement` pointer events, pointer capture, and `ManipulationMode`
-- **Lock mode**:
-  - Captures pointer on press
-  - Sets `ManipulationMode = None` to block parent manipulations
-  - Blocks mouse wheel events from reaching parent ScrollView
-  - Your control still receives all pointer and wheel events
-- **Manual mode**:
-  - Dynamically captures/releases pointer in `PointerMoved` based on `WIllLock` state
-  - When `WIllLock = Locked`: Captures pointer + `ManipulationMode = None`
-  - When `WIllLock = Unlocked`: Releases pointer + `ManipulationMode = System`
-  - Mouse wheel events blocked from parent when `WIllLock = Locked`, but your control still receives them
-  - Tracks captured pointers internally to avoid null reference exceptions
-- **Default mode**:
-  - Captures pointer on press with `ManipulationMode = System`
-  - Normal behavior, parent can receive manipulations
-- **Mouse and Pen Support**:
-  - Full mouse button detection (Left, Right, Middle, XButton1-2)
-  - Gaming mice with extended buttons (XButton3-9) supported via `Extended` button type
-  - Pen pressure sensitivity and device type detection
-  - Hover tracking without button press (`TouchActionResult.Pointer`)
-  - Left button uses standard touch events for backward compatibility
-  - Other buttons use `Pointer` events to avoid breaking existing controls
-  - Multi-button drag operations with `PressedButtons` flags
-- Mouse wheel events can be used for zoom/scale in your control
-- All touch gestures work with both touch and mouse input simultaneously
-- **Testing Note**: Mouse wheel testing provides good coverage for Manual mode behavior even without touch device
-
----
-
-## Troubleshooting
-
-### Issue: ScrollView steals my control's gestures on iOS
-
-**Solution**: Use `Manual` mode with dynamic locking:
-
-```xml
-<MyControl touch:TouchEffect.ShareTouch="Manual"
-           touch:TouchEffect.ForceAttach="True" />
-```
-
-Then set `WIllLock = ShareLockState.Locked` when you want control, or `Unlocked` to release parent.
-
----
-
-### Issue: Can't scroll vertically when touching my horizontal slider
-
-**Problem**: Using `Lock` mode blocks all parent gestures.
-
-**Solution**: Switch to `Manual` mode and only lock for horizontal gestures:
-
-```csharp
-TouchEffect.SetShareTouch(mySlider, TouchHandlingStyle.Manual);
-
-// In your IGestureListener implementation:
-// - Set WIllLock = Locked when horizontal pan detected
-// - Set WIllLock = Unlocked when vertical pan detected
-```
-
----
-
-### Issue: Taps detected while swiping
-
-**Solution**: Adjust the velocity threshold:
-
-```csharp
-TouchEffect.TappedVelocityThresholdPoints = 300f; // Increase for stricter tap detection
-```
-
----
-
-### Issue: Long press triggers too quickly/slowly
-
-**Solution**: Adjust the long press timing:
+Adjust the long press timing:
 
 ```csharp
 TouchEffect.LongPressTimeMsDefault = 1000; // 1 second instead of 1.5
 ```
 
----
-
-### Issue: Gestures not working in custom control
-
-**Checklist**:
-1. ✅ Called `UseGestures()` in MauiProgram.cs?
-2. ✅ Set `ForceAttach="True"` in XAML or code?
-3. ✅ Implemented `IGestureListener` interface?
-4. ✅ `InputTransparent` property returns `false`?
-5. ✅ Control is visible and not behind other elements?
-
----
-
-### Issue: Multi-touch gestures not working
-
-**Checklist**:
-1. ✅ Check `args.NumberOfTouches > 1`
-2. ✅ Check `args.Manipulation != null` before accessing scale/rotation
-3. ✅ Not using `Lock` mode which may interfere with multi-touch
-
----
-
-## Additional Utilities
-
-### Close Keyboard (Android)
+### Close keyboard (Android)
 
 ```csharp
 TouchEffect.CloseKeyboard();
@@ -907,14 +509,6 @@ if (TouchEffect.CheckLockAndSet("myButton", ms: 500))
 
 ---
 
-## Philosophy
-
-The library aims to provide **platform-agnostic gesture processing** by handling raw platform input in shared code. This approach ensures consistent behavior across iOS, Android, and Windows while maintaining native performance and feel.
-
-All gesture data uses **pixels** instead of points for better precision across platforms. Convert to your preferred units as needed using the `TouchEffect.Density` property.
-
----
-
 ## Contributing
 
 The library is actively developed. If you need additional features or find bugs:
@@ -925,11 +519,4 @@ The library is actively developed. If you need additional features or find bugs:
 
 ---
 
-## License
-
-[Add your license information here]
-
-## Credits
-
-Developed by AppoMobi
-Used in production by [DrawnUI for .NET MAUI](https://github.com/taublast/DrawnUi)
+Used by [DrawnUI for .NET MAUI](https://github.com/taublast/DrawnUi)
