@@ -154,6 +154,7 @@ namespace AppoMobi.Maui.Gestures
             if (_view != null && UIDevice.CurrentDevice.CheckSystemVersion(13, 4))
             {
                 _view.UserInteractionEnabled = true;
+                _view.MultipleTouchEnabled = true;
 
                 // Add hover tracking using UIHoverGestureRecognizer
                 var hoverGestureRecognizer = new UIHoverGestureRecognizer(HandleHover);
@@ -457,11 +458,6 @@ namespace AppoMobi.Maui.Gestures
             base.TouchesMoved(touches, evt);
 
             _parent.CountFingers = (int)NumberOfTouches;
-
-            if (evt.Type == UIEventType.Scroll)
-            {
-                Debug.WriteLine("WE GOT SCROLLING !!!");
-            }
 
             foreach (UITouch touch in touches.Cast<UITouch>())
             {
