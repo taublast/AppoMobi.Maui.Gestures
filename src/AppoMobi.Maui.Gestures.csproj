@@ -28,7 +28,7 @@
 
   <PropertyGroup>
     <!--<PackageReleaseNotes>Under construction</PackageReleaseNotes>-->
-    <Version>1.10.2</Version>
+    <Version>1.11.1</Version>
     <Title>AppoMobi.Maui.Gestures</Title>
     <Description>Gestures effect and helpers for .NET MAUI</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -64,7 +64,6 @@
 
 
   <ItemGroup>
-    <None Include="..\Claude.md" Link="Claude.md" />
     <None Include="..\icon128.png">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
