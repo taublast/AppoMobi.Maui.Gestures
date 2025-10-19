@@ -23,7 +23,7 @@ This library is used by [DrawnUI for .NET MAUI](https://github.com/taublast/Draw
 * ✅ Attachable .NET MAUI effect
 * ✅ Multi-touch support (rotation, pinch/zoom)
 * ✅ Customizable touch modes for cooperation with parent/child views
-* ✅ Rich gesture data: velocity, distance, time, manipulation info
+* ✅ Gesture data: velocity, distance, time, manipulation info
 * ✅ Pixel-perfect precision across all platforms
 * ✅ Platform-agnostic gesture processing
 * ✅ Commands and event handlers support
@@ -102,10 +102,9 @@ The library supports the following gesture types:
 | **Long Pressing** | Finger held down for extended time | `LongPressing` event, `CommandLongPressing` |
 | **Panning** | Finger moves across screen | `Panning` event, `PanningCommand` |
 | **Pinched** | Two-finger pinch/zoom | `Pinched` event, `PinchedCommand` |
-| **Wheel** | Mouse wheel (Windows) | Wheel event with delta |
 | **Rotation** | Two-finger rotation | Multi-touch manipulation data |
-| **Wheel** | Mouse wheel (Windows) | Wheel event with delta |
 | **Pointer** | Mouse/touchpad related data |
+| **Wheel** | Mouse wheel (Windows) | Wheel event with delta |
 
 
 ---
