@@ -27,8 +27,7 @@ This library is used by [DrawnUI for .NET MAUI](https://github.com/taublast/Draw
 * ✅ Pixel-perfect precision across all platforms
 * ✅ Platform-agnostic gesture processing
 * ✅ Commands and event handlers support
-* ✅ Mouse wheel support on Windows
-* ✅ Mouse/touchpad support (limited upon platform)
+* ✅ Mouse/touchpad support (various upon platform)
 
 ---
 
