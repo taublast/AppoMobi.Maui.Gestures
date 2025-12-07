@@ -320,6 +320,7 @@ namespace AppoMobi.Maui.Gestures
                             frameworkElement.ReleasePointerCapture(args.Pointer);
                             capturedPointerIds.Remove(args.Pointer.PointerId);
                         }
+                        _currentPressedButtons = 0;
                     }
                 }
             }
