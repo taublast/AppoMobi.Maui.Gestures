@@ -9,12 +9,8 @@ This library is used by [DrawnUI for .NET MAUI](https://github.com/taublast/Draw
 ---
 
 ## What's New
-
-* Added `Manual` touch mode for dynamic gesture control with parent controls, allowing true cooperative gesture handling inside ScrollViews and other containers.
-* Pointer Data Support: Added rich pointer/mouse event data with `TouchActionEventArgs.Pointer` property
-* Windows: Hover mouse/pointer tracking, mouse button detection (up tu 9 buttons), pen pressure, hover tracking
-* Android: Hover mouse/pointer tracking, limited mouse button detection
-* iOS/MacCatalyst: Hover mouse/pointer tracking, two-fingers scrolling, limited mouse button detection
+* Windows: fix wrong mouse button state report after exiting native window
+* Droppen .NET 8 support starting from 1.11.9.1
 
 ---
 

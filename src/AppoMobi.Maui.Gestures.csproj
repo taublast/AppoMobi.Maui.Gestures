@@ -2,16 +2,12 @@
 
 	<PropertyGroup>
         <TargetFrameworks>
-            net8.0;
-            net8.0-android34.0;
-            net8.0-ios17.0;
-            net8.0-maccatalyst17.0;
             net9.0;
             net9.0-android;
             net9.0-ios;
             net9.0-maccatalyst;
         </TargetFrameworks>
-		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net8.0-windows10.0.19041.0;net9.0-windows10.0.19041.0;</TargetFrameworks>
+		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net9.0-windows10.0.19041.0;</TargetFrameworks>
 
         <UseMaui>true</UseMaui>
 		<SingleProject>true</SingleProject>
@@ -28,7 +24,7 @@
 
   <PropertyGroup>
     <!--<PackageReleaseNotes>Under construction</PackageReleaseNotes>-->
-    <Version>1.11.1</Version>
+    <Version>1.11.9.1</Version>
     <Title>AppoMobi.Maui.Gestures</Title>
     <Description>Gestures effect and helpers for .NET MAUI</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
