@@ -4,13 +4,14 @@ Library for .NET MAUI to handle gestures. Can be consumed in XAML and code-behin
 
 This library is used by [DrawnUI for .NET MAUI](https://github.com/taublast/DrawnUi).
 
-.NET 8 and above compatible.
+.NET 9 and above compatible.
 
 ---
 
 ## What's New
-* Windows: fix wrong mouse button state report after exiting native window
-* Droppen .NET 8 support starting from 1.11.9.1
+* Nuget 1.11.9.2
+* Android: Built-in programmatic taps for sensitive screens like Galaxy S which are sending microscopic-small pans instead of a single down for a laying finger.
+* TappedCancelMoveThresholdPoints defaults to 16 for more forgiving taps (instead of 5pts allowed for pans)
 
 ---
 
