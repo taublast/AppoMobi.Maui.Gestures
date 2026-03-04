@@ -87,9 +87,9 @@ namespace AppoMobi.Maui.Gestures
         public static bool LogEnabled { get; set; }
 
         /// <summary>
-        /// How much finger can move for the gestured to be still considered as TAPPED. In points, not pixels, default is 5.
+        /// How much finger can move for the gestured to be still considered as TAPPED. In points, not pixels, default is 16.
         /// </summary>
-        public static float TappedCancelMoveThresholdPoints = 5f;
+        public static float TappedCancelMoveThresholdPoints = 16f;
 
         protected MultitouchTracker _manipulationTracker = new();
 
@@ -750,6 +750,10 @@ namespace AppoMobi.Maui.Gestures
 
         void SendAction(IGestureListener listener, TouchActionType action, TouchActionEventArgs args, TouchActionResult result)
         {
+#if ANDROID
+            SendActionPlatform(listener, action, args, result);
+#else
+
             listener.OnGestureEvent(action, args, result);
 
             //System.Diagnostics.Debug.WriteLine($"[TOUCH] Sent {action} {result} y {args.Location.Y:0}"); //x,y {args.Location.X:0}, {args.Location.Y:0} inside: {isInsideView}
@@ -758,6 +762,7 @@ namespace AppoMobi.Maui.Gestures
             {
                 WIllLock = ShareLockState.Initial;
             }
+#endif
         }
 
         object lockOnTouch = new();
